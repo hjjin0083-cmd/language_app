@@ -249,15 +249,42 @@
 <script>
 let conversationHistory = [];
 
+// 모바일 호환성 강화 TTS 음성 재생 함수
 function speakText(elementId, langCode) {
     const el = document.getElementById(elementId);
     if (!el || !el.innerText.trim() || !('speechSynthesis' in window)) return;
 
+    // 모바일 브라우저 일시정지 상태 해제
+    if (window.speechSynthesis.paused || window.speechSynthesis.pending) {
+        window.speechSynthesis.resume();
+    }
     window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(el.innerText.trim());
+
+    const textToSpeak = el.innerText.trim();
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
     utterance.lang = langCode;
     utterance.rate = 0.9;
-    window.speechSynthesis.speak(utterance);
+
+    // 모바일 브라우저 보이스 매칭 보완
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+        const matchedVoice = voices.find(v => v.lang.replace('_', '-').startsWith(langCode.substring(0, 2)));
+        if (matchedVoice) {
+            utterance.voice = matchedVoice;
+        }
+    }
+
+    // 모바일 오디오 대기 시간 확보를 위한 딜레이 처리
+    setTimeout(() => {
+        window.speechSynthesis.speak(utterance);
+    }, 100);
+}
+
+// 모바일 브라우저 음성 엔진 목록 사전 로드
+if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.getVoices();
+    };
 }
 
 function setText(id, value) {
