@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4개 국어 대화형 학습기</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f4f7f6;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+        }
+        h2 { margin: 0; color: #2c3e50; }
+        .reset-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .reset-btn:hover { background-color: #c0392b; }
+
+        /* 대화 히스토리 말풍선 영역 */
+        .chat-history {
+            max-height: 280px;
+            overflow-y: auto;
+            background: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .chat-bubble {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            line-height: 1.4;
+        }
+        .chat-bubble.user {
+            align-self: flex-end;
+            background-color: #3498db;
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+        .chat-bubble.model {
+            align-self: flex-start;
+            background-color: #e2e8f0;
+            color: #2c3e50;
+            border-bottom-left-radius: 2px;
+        }
+
+        /* 입력 영역 */
+        .input-group { display: flex; gap: 10px; margin-bottom: 20px; }
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+        }
+        input[type="text"]:focus { border-color: #3498db; }
+        .send-btn {
+            padding: 15px 30px;
+            font-size: 16px;
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .send-btn:hover { background-color: #1a252f; }
+        .send-btn:disabled { background-color: #95a5a6; cursor: not-allowed; }
+
+        .loading-box {
+            display: none;
+            text-align: center;
+            padding: 15px;
+            font-weight: bold;
+            color: #3498db;
+        }
+        .error-box {
+            display: none;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #fdecec;
+            border-left: 5px solid #e74c3c;
+            color: #922b21;
+            border-radius: 6px;
+            white-space: pre-wrap;
+        }
+
+        /* 4개 국어 결과 카드 */
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .lang-card {
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            position: relative;
+        }
+        .lang-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .lang-title { font-weight: bold; font-size: 18px; color: #2c3e50; }
+        .speaker-btn {
+            background: none;
+            color: #2c3e50;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 50%;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .speaker-btn:hover {
+            background-color: rgba(0, 0, 0, 0.08);
+            transform: scale(1.15);
+        }
+        .sov-group { background-color: #e8f4f8; border-color: #bce0fd; }
+        .svo-group { background-color: #eafaf1; border-color: #c3e6cb; }
+        .lang-text { font-size: 17px; font-weight: 600; color: #111; margin-bottom: 8px; line-height: 1.4; }
+        .pronunciation { color: #555; font-size: 14px; line-height: 1.5; }
+        .structure { margin-top: 8px; font-size: 13px; color: #666; }
+        
+        .metadata-box {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #fff8e1;
+            border-left: 5px solid #ffc107;
+            border-radius: 6px;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 10px; }
+            .container { padding: 15px; }
+            .input-group { flex-direction: column; }
+            .send-btn { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>💬 4개 국어 대화형 AI 학습기</h2>
+        <button class="reset-btn" onclick="resetChat()">새 대화 시작</button>
+    </div>
+
+    <!-- 대화 내역 스크롤 영역 -->
+    <div class="chat-history" id="chatHistory">
+        <div class="chat-bubble model">
+            안녕하세요! 학습할 문장을 입력하거나, 이전 문장에 대해 자유롭게 질문해보세요.
+        </div>
+    </div>
+
+    <div class="input-group">
+        <input type="text" id="userInput"
+               placeholder="문장 입력 또는 질문하기 (예: 방금 표현을 더 정중하게 바꿔줘)"
+               onkeydown="if(event.key === 'Enter') sendQuery()">
+        <button class="send-btn" id="sendBtn" onclick="sendQuery()">보내기</button>
+    </div>
+
+    <div id="loading" class="loading-box">⏳ AI가 답변과 4개 국어를 분석 중입니다...</div>
+    <div id="errorBox" class="error-box"></div>
+
+    <!-- 4개 국어 비교 카드 -->
+    <div class="result-grid" id="resultGrid" style="display: none;">
+        <div class="lang-card sov-group">
+            <div class="lang-header">
+                <span class="lang-title">🇰🇷 한국어 (SOV)</span>
+                <button class="speaker-btn" onclick="speakText('text-kr', 'ko-KR')" title="발음 듣기">🔊</button>
+            </div>
+            <div class="lang-text" id="text-kr"></div>
+            <div class="pronunciation" id="pron-kr"></div>
+            <div class="structure" id="structure-kr"></div>
+        </div>
+
+        <div class="lang-card svo-group">
+            <div class="lang-header">
+                <span class="lang-title">🇺🇸 영어 (SVO)</span>
+                <button class="speaker-btn" onclick="speakText('text-en', 'en-US')" title="발음 듣기">🔊</button>
+            </div>
+            <div class="lang-text" id="text-en"></div>
+            <div class="pronunciation" id="pron-en"></div>
+            <div class="structure" id="structure-en"></div>
+        </div>
+
+        <div class="lang-card svo-group">
+            <div class="lang-header">
+                <span class="lang-title">🇨🇳 중국어 (SVO)</span>
+                <button class="speaker-btn" onclick="speakText('text-cn', 'zh-CN')" title="발음 듣기">🔊</button>
+            </div>
+            <div class="lang-text" id="text-cn"></div>
+            <div class="pronunciation" id="pron-cn"></div>
+            <div class="structure" id="structure-cn"></div>
+        </div>
+
+        <div class="lang-card sov-group">
+            <div class="lang-header">
+                <span class="lang-title">🇯🇵 일본어 (SOV)</span>
+                <button class="speaker-btn" onclick="speakText('text-jp', 'ja-JP')" title="발음 듣기">🔊</button>
+            </div>
+            <div class="lang-text" id="text-jp"></div>
+            <div class="pronunciation" id="pron-jp"></div>
+            <div class="structure" id="structure-jp"></div>
+        </div>
+    </div>
+
+    <div class="metadata-box" id="metadataBox" style="display: none;"></div>
+</div>
+
+<script>
+let conversationHistory = [];
+
+function speakText(elementId, langCode) {
+    const el = document.getElementById(elementId);
+    if (!el || !el.innerText.trim() || !('speechSynthesis' in window)) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(el.innerText.trim());
+    utterance.lang = langCode;
+    utterance.rate = 0.9;
+    window.speechSynthesis.speak(utterance);
+}
+
+function setText(id, value) {
+    document.getElementById(id).textContent = value || '';
+}
+
+function showError(message) {
+    const box = document.getElementById('errorBox');
+    box.textContent = message;
+    box.style.display = 'block';
+}
+
+function appendChatBubble(role, text) {
+    const historyContainer = document.getElementById('chatHistory');
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble ${role}`;
+    bubble.textContent = text;
+    historyContainer.appendChild(bubble);
+    historyContainer.scrollTop = historyContainer.scrollHeight;
+}
+
+function resetChat() {
+    conversationHistory = [];
+    document.getElementById('chatHistory').innerHTML = `
+        <div class="chat-bubble model">
+            대화가 초기화되었습니다. 새로운 문장을 입력해주세요!
+        </div>`;
+    document.getElementById('resultGrid').style.display = 'none';
+    document.getElementById('metadataBox').style.display = 'none';
+    document.getElementById('errorBox').style.display = 'none';
+    document.getElementById('userInput').value = '';
+}
+
+async function sendQuery() {
+    const inputEl = document.getElementById('userInput');
+    const btnEl = document.getElementById('sendBtn');
+    const loadingEl = document.getElementById('loading');
+    const resultGrid = document.getElementById('resultGrid');
+    const metadataBox = document.getElementById('metadataBox');
+    const errorBox = document.getElementById('errorBox');
+    const text = inputEl.value.trim();
+
+    if (!text) {
+        showError('문장이나 질문을 입력해주세요.');
+        inputEl.focus();
+        return;
+    }
+
+    appendChatBubble('user', text);
+    inputEl.value = '';
+
+    btnEl.disabled = true;
+    loadingEl.style.display = 'block';
+    errorBox.style.display = 'none';
+
+    try {
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                text: text,
+                history: conversationHistory
+            })
+        });
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (_) {
+            throw new Error(`서버가 올바른 JSON 응답을 보내지 않았습니다. (HTTP ${response.status})`);
+        }
+
+        if (!response.ok) {
+            throw new Error(data.detail || `서버 오류가 발생했습니다. (HTTP ${response.status})`);
+        }
+
+        conversationHistory.push({ role: 'user', content: text });
+        conversationHistory.push({ role: 'model', content: data.languages?.korean?.text || text });
+
+        if (data.metadata?.contrast_note) {
+            appendChatBubble('model', data.metadata.contrast_note);
+        }
+
+        const languages = data.languages || {};
+        const items = [
+            ['korean', 'kr'],
+            ['english', 'en'],
+            ['chinese', 'cn'],
+            ['japanese', 'jp']
+        ];
+
+        items.forEach(([key, short]) => {
+            const item = languages[key] || {};
+            setText(`text-${short}`, item.text);
+            setText(`pron-${short}`, item.pronunciation ? `발음: ${item.pronunciation}` : '');
+            setText(`structure-${short}`, item.structure ? `어순: ${item.structure}` : '');
+        });
+
+        setText('metadataBox', data.metadata?.contrast_note || '');
+        resultGrid.style.display = 'grid';
+        metadataBox.style.display = data.metadata?.contrast_note ? 'block' : 'none';
+
+    } catch (error) {
+        console.error(error);
+        showError(error.message || '알 수 없는 오류가 발생했습니다.');
+    } finally {
+        loadingEl.style.display = 'none';
+        btnEl.disabled = false;
+    }
+}
+</script>
+</body>
+</html>
