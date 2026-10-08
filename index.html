@@ -444,9 +444,9 @@
                 <button class="scrap-all-btn" onclick="scrapCurrentResult()">⭐ 전체 단어장에 저장</button>
             </div>
 
-            <!-- 4개 국어 카드 (한·영·중·일 순서) -->
+            <!-- 4개 국어 카드 (어순 그룹화: 한국어 -> 일본어 -> 영어 -> 중국어) -->
             <div class="result-grid" id="resultGrid">
-                <!-- 1. 한국어 -->
+                <!-- 1. 한국어 (SOV) -->
                 <div class="lang-card sov-group">
                     <div class="lang-header">
                         <span class="lang-title">🇰🇷 한국어 (SOV)</span>
@@ -457,7 +457,18 @@
                     <div class="structure" id="structure-kr"></div>
                 </div>
 
-                <!-- 2. 영어 -->
+                <!-- 2. 일본어 (SOV) -->
+                <div class="lang-card sov-group">
+                    <div class="lang-header">
+                        <span class="lang-title">🇯🇵 일본어 (SOV)</span>
+                        <button class="icon-btn" onclick="speakText('text-jp', 'ja-JP')" title="발음 듣기">🔊</button>
+                    </div>
+                    <div class="lang-text" id="text-jp"></div>
+                    <div class="pronunciation" id="pron-jp"></div>
+                    <div class="structure" id="structure-jp"></div>
+                </div>
+
+                <!-- 3. 영어 (SVO) -->
                 <div class="lang-card svo-group">
                     <div class="lang-header">
                         <span class="lang-title">🇺🇸 영어 (SVO)</span>
@@ -468,7 +479,7 @@
                     <div class="structure" id="structure-en"></div>
                 </div>
 
-                <!-- 3. 중국어 -->
+                <!-- 4. 중국어 (SVO) -->
                 <div class="lang-card svo-group">
                     <div class="lang-header">
                         <span class="lang-title">🇨🇳 중국어 (SVO)</span>
@@ -477,17 +488,6 @@
                     <div class="lang-text" id="text-cn"></div>
                     <div class="pronunciation" id="pron-cn"></div>
                     <div class="structure" id="structure-cn"></div>
-                </div>
-
-                <!-- 4. 일본어 -->
-                <div class="lang-card sov-group">
-                    <div class="lang-header">
-                        <span class="lang-title">🇯🇵 일본어 (SOV)</span>
-                        <button class="icon-btn" onclick="speakText('text-jp', 'ja-JP')" title="발음 듣기">🔊</button>
-                    </div>
-                    <div class="lang-text" id="text-jp"></div>
-                    <div class="pronunciation" id="pron-jp"></div>
-                    <div class="structure" id="structure-jp"></div>
                 </div>
             </div>
         </div>
@@ -519,12 +519,12 @@
                 <h4>1. 기본 문장 학습 및 질문</h4>
                 <ul>
                     <li>하단 입력창에 알고 싶은 <strong>한국어 문장, 영어 문장, 질문</strong>을 자유롭게 입력 후 엔터를 누르세요.</li>
-                    <li>AI가 맥락을 이해하고 <strong>한·영·중·일 4개 국어로 번역 및 어순 구조</strong>를 대조해 줍니다.</li>
+                    <li>AI가 맥락을 이해하고 <strong>한·일·영·중 4개 국어로 번역 및 어순 구조</strong>를 대조해 줍니다.</li>
                 </ul>
             </div>
 
             <div class="guide-section">
-                <h4>2. 🔊 음성 발음 들으기 및 🎤 음성 입력 (STT)</h4>
+                <h4>2. 🔊 음성 발음 듣기 및 🎤 음성 입력 (STT)</h4>
                 <ul>
                     <li>각 언어 카드의 <strong>🔊 스피커 버튼</strong>을 누르면 원어민 발음을 들을 수 있습니다.</li>
                     <li>입력창 오른쪽의 <strong>🎤 마이크 버튼</strong>을 눌러 직접 말로 질문할 수 있습니다. (PC/스마트폰 크롬 권장)</li>
@@ -675,9 +675,9 @@ function scrapCurrentResult() {
         id: 'vocab_' + Date.now(),
         date: new Date().toLocaleDateString(),
         kr: res?.korean?.text || '',
+        jp: res?.japanese?.text || '',
         en: res?.english?.text || '',
-        cn: res?.chinese?.text || '',
-        jp: res?.japanese?.text || ''
+        cn: res?.chinese?.text || ''
     };
 
     savedVocab.unshift(item);
@@ -716,9 +716,9 @@ function renderVocabList() {
             <button class="vocab-delete-btn" onclick="deleteVocabItem('${v.id}')">✖ 삭제</button>
             <div style="font-size:12px; color:#888; margin-bottom:4px;">📅 ${v.date}</div>
             <div><strong>🇰🇷</strong> ${escapeHtml(v.kr)}</div>
+            <div><strong>🇯🇵</strong> ${escapeHtml(v.jp)}</div>
             <div><strong>🇺🇸</strong> ${escapeHtml(v.en)}</div>
             <div><strong>🇨🇳</strong> ${escapeHtml(v.cn)}</div>
-            <div><strong>🇯🇵</strong> ${escapeHtml(v.jp)}</div>
         `;
         listEl.appendChild(div);
     });
@@ -872,9 +872,9 @@ function renderLastResult(data) {
     const languages = data.languages || {};
     const items = [
         ['korean', 'kr'],
+        ['japanese', 'jp'],
         ['english', 'en'],
-        ['chinese', 'cn'],
-        ['japanese', 'jp']
+        ['chinese', 'cn']
     ];
 
     items.forEach(([key, short]) => {
@@ -920,9 +920,9 @@ function speakText(elementId, langCode) {
 
     const langMap = {
         'ko-KR': ['ko-KR', 'ko'],
+        'ja-JP': ['ja-JP', 'ja'],
         'en-US': ['en-US', 'en'],
-        'zh-CN': ['zh-CN', 'zh-Hans', 'zh'],
-        'ja-JP': ['ja-JP', 'ja']
+        'zh-CN': ['zh-CN', 'zh-Hans', 'zh']
     };
 
     const targetLangs = langMap[langCode] || [langCode];
