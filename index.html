@@ -125,8 +125,6 @@
         .action-btn:hover { background-color: #bdc3c7; }
         .help-btn { background-color: #e67e22; color: white; border: none; }
         .help-btn:hover { background-color: #d35400; }
-        .song-btn { background-color: #9b59b6; color: white; border: none; }
-        .song-btn:hover { background-color: #8e44ad; }
 
         .toggle-sidebar-btn {
             display: none;
@@ -269,9 +267,6 @@
             border: 1px solid #e0e0e0;
             box-shadow: 0 2px 5px rgba(0,0,0,0.03);
             position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
         }
         .lang-header {
             display: flex;
@@ -300,21 +295,6 @@
         .pronunciation { color: #555; font-size: 13px; line-height: 1.4; }
         .structure { margin-top: 6px; font-size: 12px; color: #666; }
         
-        .song-popup-trigger {
-            margin-top: 10px;
-            padding: 6px 10px;
-            background-color: #8e44ad;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-            transition: background 0.2s;
-        }
-        .song-popup-trigger:hover { background-color: #7d3c98; }
-
         .metadata-box {
             margin-top: 15px;
             padding: 15px;
@@ -365,39 +345,6 @@
             font-size: 14px;
             line-height: 1.6;
             color: #333;
-        }
-
-        /* 노래 쏙쏙 팝업 전용 스타일 */
-        .song-card-item {
-            background: #fcf8ff;
-            border: 1px solid #e1d5e7;
-            border-radius: 8px;
-            padding: 14px;
-        }
-        .song-title {
-            font-weight: bold;
-            font-size: 16px;
-            color: #8e44ad;
-            margin-bottom: 4px;
-        }
-        .song-lyrics {
-            background: #fff;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-style: italic;
-            border-left: 3px solid #9b59b6;
-            margin: 8px 0;
-            font-size: 14px;
-        }
-        .idiom-badge {
-            display: inline-block;
-            background: #e8daef;
-            color: #6c3483;
-            font-size: 12px;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-weight: bold;
-            margin-bottom: 4px;
         }
 
         .guide-section {
@@ -486,7 +433,6 @@
                 <h2 id="currentRoomTitle">💬 4개 국어 대화형 AI 학습기</h2>
             </div>
             <div class="header-actions">
-                <button class="action-btn song-btn" onclick="openSongModal('all')">🎶 노래 속 문법&관용구</button>
                 <button class="action-btn help-btn" onclick="openHelpModal()">❓ 사용 설명서</button>
                 <button class="action-btn" onclick="openVocabModal()">⭐ 단어장</button>
                 <button class="action-btn" onclick="exportChat('txt')">📄 TXT</button>
@@ -497,7 +443,7 @@
         <!-- 대화 내역 영역 -->
         <div class="chat-history" id="chatHistory">
             <div class="chat-bubble model">
-                안녕하세요! 학습할 문장을 입력하거나 마이크 버튼을 눌러 음성으로 질문해 보세요. (우상단 🎶 노래 속 문법&관용구를 클릭하면 명곡 표현을 배울 수 있습니다!)
+                안녕하세요! 학습할 문장을 입력하거나 마이크 버튼을 눌러 음성으로 질문해 보세요. (우상단 ❓ 사용 설명서를 참고하세요!)
             </div>
         </div>
 
@@ -524,74 +470,51 @@
             <div class="result-grid" id="resultGrid">
                 <!-- 1. 한국어 (SOV) -->
                 <div class="lang-card sov-group">
-                    <div>
-                        <div class="lang-header">
-                            <span class="lang-title">🇰🇷 한국어 (SOV)</span>
-                            <button class="icon-btn" onclick="speakText('text-kr', 'ko-KR')" title="발음 듣기">🔊</button>
-                        </div>
-                        <div class="lang-text" id="text-kr"></div>
-                        <div class="pronunciation" id="pron-kr"></div>
-                        <div class="structure" id="structure-kr"></div>
+                    <div class="lang-header">
+                        <span class="lang-title">🇰🇷 한국어 (SOV)</span>
+                        <button class="icon-btn" onclick="speakText('text-kr', 'ko-KR')" title="발음 듣기">🔊</button>
                     </div>
-                    <button class="song-popup-trigger" onclick="openSongModal('kr')">🎵 🇰🇷 노래 표현 쏙쏙 보기</button>
+                    <div class="lang-text" id="text-kr"></div>
+                    <div class="pronunciation" id="pron-kr"></div>
+                    <div class="structure" id="structure-kr"></div>
                 </div>
 
                 <!-- 2. 일본어 (SOV) -->
                 <div class="lang-card sov-group">
-                    <div>
-                        <div class="lang-header">
-                            <span class="lang-title">🇯🇵 일본어 (SOV)</span>
-                            <button class="icon-btn" onclick="speakText('text-jp', 'ja-JP')" title="발음 듣기">🔊</button>
-                        </div>
-                        <div class="lang-text" id="text-jp"></div>
-                        <div class="pronunciation" id="pron-jp"></div>
-                        <div class="structure" id="structure-jp"></div>
+                    <div class="lang-header">
+                        <span class="lang-title">🇯🇵 일본어 (SOV)</span>
+                        <button class="icon-btn" onclick="speakText('text-jp', 'ja-JP')" title="발음 듣기">🔊</button>
                     </div>
-                    <button class="song-popup-trigger" onclick="openSongModal('jp')">🎵 🇯🇵 노래 표현 쏙쏙 보기</button>
+                    <div class="lang-text" id="text-jp"></div>
+                    <div class="pronunciation" id="pron-jp"></div>
+                    <div class="structure" id="structure-jp"></div>
                 </div>
 
                 <!-- 3. 영어 (SVO) -->
                 <div class="lang-card svo-group">
-                    <div>
-                        <div class="lang-header">
-                            <span class="lang-title">🇺🇸 영어 (SVO)</span>
-                            <button class="icon-btn" onclick="speakText('text-en', 'en-US')" title="발음 듣기">🔊</button>
-                        </div>
-                        <div class="lang-text" id="text-en"></div>
-                        <div class="pronunciation" id="pron-en"></div>
-                        <div class="structure" id="structure-en"></div>
+                    <div class="lang-header">
+                        <span class="lang-title">🇺🇸 영어 (SVO)</span>
+                        <button class="icon-btn" onclick="speakText('text-en', 'en-US')" title="발음 듣기">🔊</button>
                     </div>
-                    <button class="song-popup-trigger" onclick="openSongModal('en')">🎵 🇺🇸 노래 표현 쏙쏙 보기</button>
+                    <div class="lang-text" id="text-en"></div>
+                    <div class="pronunciation" id="pron-en"></div>
+                    <div class="structure" id="structure-en"></div>
                 </div>
 
                 <!-- 4. 중국어 (SVO) -->
                 <div class="lang-card svo-group">
-                    <div>
-                        <div class="lang-header">
-                            <span class="lang-title">🇨🇳 중국어 (SVO)</span>
-                            <button class="icon-btn" onclick="speakText('text-cn', 'zh-CN')" title="발음 듣기">🔊</button>
-                        </div>
-                        <div class="lang-text" id="text-cn"></div>
-                        <div class="pronunciation" id="pron-cn"></div>
-                        <div class="structure" id="structure-cn"></div>
+                    <div class="lang-header">
+                        <span class="lang-title">🇨🇳 중국어 (SVO)</span>
+                        <button class="icon-btn" onclick="speakText('text-cn', 'zh-CN')" title="발음 듣기">🔊</button>
                     </div>
-                    <button class="song-popup-trigger" onclick="openSongModal('cn')">🎵 🇨🇳 노래 표현 쏙쏙 보기</button>
+                    <div class="lang-text" id="text-cn"></div>
+                    <div class="pronunciation" id="pron-cn"></div>
+                    <div class="structure" id="structure-cn"></div>
                 </div>
             </div>
         </div>
 
         <div class="metadata-box" id="metadataBox" style="display: none;"></div>
-    </div>
-</div>
-
-<!-- 노래 가사 문법&이디엄 쏙쏙 모달 팝업 -->
-<div class="modal-overlay" id="songModal">
-    <div class="modal-card">
-        <div class="modal-header">
-            <h3 style="margin: 0; color: #8e44ad;" id="songModalTitle">🎶 노래 가사 속 핵심 문법 & 이디엄 쏙쏙</h3>
-            <button class="action-btn" onclick="closeSongModal()">닫기 ✖</button>
-        </div>
-        <div class="modal-body" id="songModalContent"></div>
     </div>
 </div>
 
@@ -623,14 +546,7 @@
             </div>
 
             <div class="guide-section">
-                <h4>2. 🎶 노래 가사 속 문법 & 이디엄 쏙쏙</h4>
-                <ul>
-                    <li>상단 <strong>'🎶 노래 속 문법&관용구'</strong> 또는 카드별 버튼을 누르면 명곡 가사 속 핵심 핵심 문법과 관용 표현을 바로 학습할 수 있습니다.</li>
-                </ul>
-            </div>
-
-            <div class="guide-section">
-                <h4>3. 🔊 음성 발음 듣기 및 🎤 음성 입력 (STT)</h4>
+                <h4>2. 🔊 음성 발음 듣기 및 🎤 음성 입력 (STT)</h4>
                 <ul>
                     <li>각 언어 카드의 <strong>🔊 스피커 버튼</strong>을 누르면 원어민 발음을 들을 수 있습니다.</li>
                     <li>입력창 오른쪽의 <strong>🎤 마이크 버튼</strong>을 눌러 직접 말로 질문할 수 있습니다. (PC/스마트폰 크롬 권장)</li>
@@ -638,10 +554,17 @@
             </div>
 
             <div class="guide-section">
-                <h4>4. ⭐ 단어장 및 대화 내역 내보내기</h4>
+                <h4>3. ⭐ 단어장 및 대화 내역 내보내기</h4>
                 <ul>
                     <li>마음에 드는 번역 결과가 나오면 <strong>'⭐ 전체 단어장에 저장'</strong> 버튼을 눌러 스크랩해 두세요.</li>
                     <li>상단 <strong>📄 TXT / 📊 CSV</strong> 버튼을 눌러 전체 대화 내역을 문서/엑셀 파일로 다운로드할 수 있습니다.</li>
+                </ul>
+            </div>
+
+            <div class="guide-section">
+                <h4>4. 💬 대화방 관리</h4>
+                <ul>
+                    <li>좌측 사이드바에서 <strong>'+ 새 대화방'</strong>을 누르면 주제별로 대화를 나누어 관리할 수 있습니다. (✏️ 이름 변경, 🗑️ 삭제)</li>
                 </ul>
             </div>
         </div>
@@ -658,109 +581,6 @@ let activeRoomId = null;
 let savedVocab = [];
 let recognition = null;
 let isRecording = false;
-
-// 노래 가사 문법 및 이디엄 DB
-const songData = [
-    {
-        lang: 'kr',
-        langName: '🇰🇷 한국어 명곡',
-        song: '김동률 - 《감사》',
-        lyrics: '눈부신 계절이 지나가도 마르지 않는 샘처럼',
-        idiom: '마르지 않는 샘 (Unfailing Source)',
-        grammar: '<strong>-가도/-어도 (연결 어미)</strong>: 양보나 조건을 나타내며, "~하더라도"의 의미로 쓰입니다.'
-    },
-    {
-        lang: 'kr',
-        langName: '🇰🇷 한국어 명곡',
-        song: '우효 (Oohyo) - 《민들레》',
-        lyrics: '사랑해요 마이 러브 유어 마이 드림, 내 마음속에 가득 찬',
-        idiom: '가득 차다 (Be Full Of / Overflow)',
-        grammar: '<strong>가득 (부사) + 차다 (동사)</strong>: 어떤 감정이나 공간이 여백 없이 꽉 찬 상태를 비유적으로 표현합니다.'
-    },
-    {
-        lang: 'jp',
-        langName: '🇯🇵 일본어 명곡',
-        song: 'Aimyon (あいみょん) - 《マリーゴールド (메리골드)》',
-        lyrics: '麦わらの帽子の君が 揺れたマリーゴールドに似てる',
-        idiom: '～に似ている (N에 닮다/비슷하다)',
-        grammar: '<strong>조사 に + 似ている (상태)</strong>: 대상을 비교하여 성질이나 외모가 비슷함을 나타내는 대표 관용 표현입니다.'
-    },
-    {
-        lang: 'jp',
-        langName: '🇯🇵 일본어 명곡',
-        song: 'Utada Hikaru (宇多田ヒカル) - 《First Love》',
-        lyrics: '明日の今頃には あなたを思い出しているのかな',
-        idiom: '今頃 (이맘때/지금쯤)',
-        grammar: '<strong>～시점 + 頃(ごろ)</strong>: 대략적인 시간대를 가리키며, 미래 상황을 추측할 때 자주 사용됩니다.'
-    },
-    {
-        lang: 'en',
-        langName: '🇺🇸 영어 명곡',
-        song: 'Bruno Mars - 《Just the Way You Are》',
-        lyrics: "When I see your face, there's not a thing that I would change",
-        idiom: 'Just the way you are (있는 그대로의 너)',
-        grammar: '<strong>Not a thing (단 하나도 ~없다)</strong>: Nothing보다 강조된 형태로 문어/구어체에서 자주 언급되는 관용구입니다.'
-    },
-    {
-        lang: 'en',
-        langName: '🇺🇸 영어 명곡',
-        song: 'Adele - 《Someone Like You》',
-        lyrics: 'Never mind, I\'ll find someone like you',
-        idiom: 'Never mind (신경 쓰지 마 / 괜찮아)',
-        grammar: '<strong>Imperative Verb + Mind</strong>: 지나간 일이나 상대방의 미안함/상심을 달랠 때 쓰는 대표적인 영어 숙어입니다.'
-    },
-    {
-        lang: 'cn',
-        langName: '🇨🇳 중국어 명곡',
-        song: '등려군 (邓丽君) - 《첨밀밀 (甜蜜蜜)》',
-        lyrics: '甜蜜蜜，你笑得甜蜜蜜，好像花儿开在春风里',
-        idiom: '甜蜜蜜 (달콤하고 달달하다)',
-        grammar: '<strong>정도보어 得 (de)</strong>: 동사(笑) 뒤에 得를 써서 웃는 모양이나 정도가 "달콤하다"임을 설명해 줍니다.'
-    },
-    {
-        lang: 'cn',
-        langName: '🇨🇳 중국어 명곡',
-        song: '주걸륜 (周杰伦) - 《청화자 (青花瓷)》',
-        lyrics: '天青色等烟雨，而我在等你',
-        idiom: '烟雨 (안개비 / 수묵화 같은 운치)',
-        grammar: '<strong>접속사 而 (ér)</strong>: 대조나 전환을 나타내어 "비가 내리기를 기다리듯, 나는 너를 기다린다"는 시적 운율을 만들어냅니다.'
-    }
-];
-
-// 노래 모달 팝업 로직
-function openSongModal(filterLang = 'all') {
-    const modal = document.getElementById('songModal');
-    const container = document.getElementById('songModalContent');
-    const title = document.getElementById('songModalTitle');
-    container.innerHTML = '';
-
-    let filtered = songData;
-    if (filterLang !== 'all') {
-        filtered = songData.filter(s => s.lang === filterLang);
-        const langMap = { kr: '🇰🇷 한국어', jp: '🇯🇵 일본어', en: '🇺🇸 영어', cn: '🇨🇳 중국어' };
-        title.textContent = `🎶 ${langMap[filterLang]} 노래 속 핵심 문법 & 이디엄`;
-    } else {
-        title.textContent = '🎶 4개 국어 명곡 가사 속 핵심 문법 & 이디엄 쏙쏙';
-    }
-
-    filtered.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'song-card-item';
-        div.innerHTML = `
-            <div class="song-title">${item.song}</div>
-            <div class="song-lyrics">"${escapeHtml(item.lyrics)}"</div>
-            <div class="idiom-badge">💡 핵심 관용구: ${escapeHtml(item.idiom)}</div>
-            <div style="font-size:13px; color:#444; margin-top:4px;">${item.grammar}</div>
-        `;
-        container.appendChild(div);
-    });
-
-    modal.style.display = 'flex';
-}
-
-function closeSongModal() {
-    document.getElementById('songModal').style.display = 'none';
-}
 
 // 모바일 사이드바 토글
 function toggleSidebar() {
@@ -1047,7 +867,7 @@ function renderChatHistory(room) {
     if (!room.uiBubbles || room.uiBubbles.length === 0) {
         historyContainer.innerHTML = `
             <div class="chat-bubble model">
-                안녕하세요! 학습할 문장을 입력하거나 마이크 버튼을 눌러 음성으로 질문해 보세요. (우상단 🎶 노래 속 문법&관용구를 클릭하면 명곡 표현을 배울 수 있습니다!)
+                안녕하세요! 학습할 문장을 입력하거나 마이크 버튼을 눌러 음성으로 질문해 보세요. (우상단 ❓ 사용 설명서를 참고하세요!)
             </div>`;
         return;
     }
