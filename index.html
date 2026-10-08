@@ -141,7 +141,8 @@
         /* 대화 히스토리 말풍선 */
         .chat-history {
             flex: 1;
-            max-height: 320px;
+            min-height: 250px;
+            max-height: 450px;
             overflow-y: auto;
             background: #fafafa;
             border: 1px solid #e0e0e0;
@@ -153,11 +154,12 @@
             gap: 10px;
         }
         .chat-bubble {
-            max-width: 80%;
+            max-width: 85%;
             padding: 10px 14px;
             border-radius: 12px;
             font-size: 15px;
             line-height: 1.4;
+            word-break: break-word;
         }
         .chat-bubble.user {
             align-self: flex-end;
@@ -240,7 +242,7 @@
             justify-content: space-between;
             align-items: center;
             margin-top: 10px;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
         .scrap-all-btn {
             background: #f1c40f;
@@ -305,7 +307,7 @@
             white-space: pre-wrap;
         }
 
-        /* 모달 팝업 공통 (단어장, 사용 설명서) */
+        /* 모달 팝업 공통 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -345,7 +347,6 @@
             color: #333;
         }
 
-        /* 사용법 모달 내부 스타일 */
         .guide-section {
             background: #f8f9fa;
             border-left: 4px solid #3498db;
@@ -374,7 +375,7 @@
             color: #e74c3c;
         }
 
-        /* 모바일 대응 레이아웃 */
+        /* 스마트폰 / 모바일 반응형 스타일 최적화 */
         @media (max-width: 768px) {
             .sidebar {
                 position: fixed;
@@ -384,10 +385,31 @@
             }
             .sidebar.open { left: 0; }
             .toggle-sidebar-btn { display: block; }
-            .main-content { padding: 10px; }
+            .main-content { padding: 8px; }
             .container { padding: 12px; }
-            .input-group { flex-wrap: wrap; }
-            .send-btn { flex: 1; }
+            
+            .chat-history {
+                min-height: 280px;
+                max-height: 50vh;
+                padding: 10px;
+            }
+            .chat-bubble {
+                max-width: 90%;
+                font-size: 14px;
+            }
+
+            .header h2 { font-size: 16px; }
+            .action-btn { padding: 5px 8px; font-size: 12px; }
+            
+            .input-group { gap: 6px; }
+            input[type="text"] {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+            .mic-btn, .send-btn {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -428,7 +450,7 @@
         <!-- 입력 및 STT 마이크 영역 -->
         <div class="input-group">
             <input type="text" id="userInput"
-                   placeholder="문장 입력 또는 질문하기 (마이크 버튼으로 음성 입력 가능)"
+                   placeholder="문장 입력 또는 질문하기 (마이크로 음성 입력 가능)"
                    onkeydown="if(event.key === 'Enter') sendQuery()">
             <button class="mic-btn" id="micBtn" onclick="toggleSTT()" title="음성 입력 시작/중지">🎤</button>
             <button class="send-btn" id="sendBtn" onclick="sendQuery()">보내기</button>
@@ -444,7 +466,7 @@
                 <button class="scrap-all-btn" onclick="scrapCurrentResult()">⭐ 전체 단어장에 저장</button>
             </div>
 
-            <!-- 4개 국어 카드 (어순 그룹화: 한국어 -> 일본어 -> 영어 -> 중국어) -->
+            <!-- 4개 국어 카드 (한국어 -> 일본어 -> 영어 -> 중국어) -->
             <div class="result-grid" id="resultGrid">
                 <!-- 1. 한국어 (SOV) -->
                 <div class="lang-card sov-group">
@@ -518,7 +540,7 @@
             <div class="guide-section">
                 <h4>1. 기본 문장 학습 및 질문</h4>
                 <ul>
-                    <li>하단 입력창에 알고 싶은 <strong>한국어 문장, 영어 문장, 질문</strong>을 자유롭게 입력 후 엔터를 누르세요.</li>
+                    <li>하단 입력창에 알고 싶은 <strong>한국어, 일본어, 영어, 중국어 문장이나 질문</strong>을 입력 후 엔터를 누르면 바로 번역되어 4개 국어로 대조 분석됩니다.</li>
                     <li>AI가 맥락을 이해하고 <strong>한·일·영·중 4개 국어로 번역 및 어순 구조</strong>를 대조해 줍니다.</li>
                 </ul>
             </div>
