@@ -110,12 +110,12 @@
             gap: 10px;
         }
         .header-left { display: flex; align-items: center; gap: 10px; }
-        .header-actions { display: flex; gap: 8px; }
+        .header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
         .action-btn {
             background-color: #ecf0f1;
             color: #2c3e50;
             border: 1px solid #bdc3c7;
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 13px;
@@ -123,6 +123,8 @@
             transition: all 0.2s;
         }
         .action-btn:hover { background-color: #bdc3c7; }
+        .help-btn { background-color: #e67e22; color: white; border: none; }
+        .help-btn:hover { background-color: #d35400; }
 
         .toggle-sidebar-btn {
             display: none;
@@ -303,7 +305,7 @@
             white-space: pre-wrap;
         }
 
-        /* 단어장 모달 창 */
+        /* 모달 팝업 공통 (단어장, 사용 설명서) */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -317,7 +319,7 @@
             background: white;
             width: 90%;
             max-width: 650px;
-            max-height: 80vh;
+            max-height: 85vh;
             border-radius: 12px;
             padding: 20px;
             display: flex;
@@ -338,7 +340,22 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
         }
+
+        /* 사용법 모달 내부 스타일 */
+        .guide-section {
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 12px 15px;
+            border-radius: 4px;
+        }
+        .guide-section h4 { margin: 0 0 6px 0; color: #2c3e50; font-size: 15px; }
+        .guide-section ul { margin: 0; padding-left: 20px; }
+        .guide-section li { margin-bottom: 4px; }
+
         .vocab-item {
             background: #f8f9fa;
             border: 1px solid #e9ecef;
@@ -394,6 +411,7 @@
                 <h2 id="currentRoomTitle">💬 4개 국어 대화형 AI 학습기</h2>
             </div>
             <div class="header-actions">
+                <button class="action-btn help-btn" onclick="openHelpModal()">❓ 사용 설명서</button>
                 <button class="action-btn" onclick="openVocabModal()">⭐ 단어장</button>
                 <button class="action-btn" onclick="exportChat('txt')">📄 TXT</button>
                 <button class="action-btn" onclick="exportChat('csv')">📊 CSV</button>
@@ -403,7 +421,7 @@
         <!-- 대화 내역 영역 -->
         <div class="chat-history" id="chatHistory">
             <div class="chat-bubble model">
-                안녕하세요! 학습할 문장을 입력하거나 마이크 버튼을 눌러 음성으로 질문해 보세요.
+                안녕하세요! 학습할 문장을 입력하거나 마이크 버튼을 눌러 음성으로 질문해 보세요. (우상단 ❓ 사용 설명서를 참고하세요!)
             </div>
         </div>
 
@@ -426,8 +444,9 @@
                 <button class="scrap-all-btn" onclick="scrapCurrentResult()">⭐ 전체 단어장에 저장</button>
             </div>
 
-            <!-- 4개 국어 카드 -->
+            <!-- 4개 국어 카드 (한·영·중·일 순서) -->
             <div class="result-grid" id="resultGrid">
+                <!-- 1. 한국어 -->
                 <div class="lang-card sov-group">
                     <div class="lang-header">
                         <span class="lang-title">🇰🇷 한국어 (SOV)</span>
@@ -438,6 +457,7 @@
                     <div class="structure" id="structure-kr"></div>
                 </div>
 
+                <!-- 2. 영어 -->
                 <div class="lang-card svo-group">
                     <div class="lang-header">
                         <span class="lang-title">🇺🇸 영어 (SVO)</span>
@@ -448,6 +468,7 @@
                     <div class="structure" id="structure-en"></div>
                 </div>
 
+                <!-- 3. 중국어 -->
                 <div class="lang-card svo-group">
                     <div class="lang-header">
                         <span class="lang-title">🇨🇳 중국어 (SVO)</span>
@@ -458,6 +479,7 @@
                     <div class="structure" id="structure-cn"></div>
                 </div>
 
+                <!-- 4. 일본어 -->
                 <div class="lang-card sov-group">
                     <div class="lang-header">
                         <span class="lang-title">🇯🇵 일본어 (SOV)</span>
@@ -482,6 +504,48 @@
             <button class="action-btn" onclick="closeVocabModal()">닫기 ✖</button>
         </div>
         <div class="modal-body" id="vocabList"></div>
+    </div>
+</div>
+
+<!-- 사용 설명서 모달 팝업 -->
+<div class="modal-overlay" id="helpModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 style="margin: 0; color: #2c3e50;">📖 4개 국어 학습기 사용 설명서</h3>
+            <button class="action-btn" onclick="closeHelpModal()">닫기 ✖</button>
+        </div>
+        <div class="modal-body">
+            <div class="guide-section">
+                <h4>1. 기본 문장 학습 및 질문</h4>
+                <ul>
+                    <li>하단 입력창에 알고 싶은 <strong>한국어 문장, 영어 문장, 질문</strong>을 자유롭게 입력 후 엔터를 누르세요.</li>
+                    <li>AI가 맥락을 이해하고 <strong>한·영·중·일 4개 국어로 번역 및 어순 구조</strong>를 대조해 줍니다.</li>
+                </ul>
+            </div>
+
+            <div class="guide-section">
+                <h4>2. 🔊 음성 발음 들으기 및 🎤 음성 입력 (STT)</h4>
+                <ul>
+                    <li>각 언어 카드의 <strong>🔊 스피커 버튼</strong>을 누르면 원어민 발음을 들을 수 있습니다.</li>
+                    <li>입력창 오른쪽의 <strong>🎤 마이크 버튼</strong>을 눌러 직접 말로 질문할 수 있습니다. (PC/스마트폰 크롬 권장)</li>
+                </ul>
+            </div>
+
+            <div class="guide-section">
+                <h4>3. ⭐ 단어장 및 대화 내역 내보내기</h4>
+                <ul>
+                    <li>마음에 드는 번역 결과가 나오면 <strong>'⭐ 전체 단어장에 저장'</strong> 버튼을 눌러 스크랩해 두세요.</li>
+                    <li>상단 <strong>📄 TXT / 📊 CSV</strong> 버튼을 눌러 전체 대화 내역을 문서/엑셀 파일로 다운로드할 수 있습니다.</li>
+                </ul>
+            </div>
+
+            <div class="guide-section">
+                <h4>4. 💬 대화방 관리</h4>
+                <ul>
+                    <li>좌측 사이드바에서 <strong>'+ 새 대화방'</strong>을 누르면 주제별로 대화를 나누어 관리할 수 있습니다. (✏️ 이름 변경, 🗑️ 삭제)</li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -536,9 +600,15 @@ function saveVocabToStorage() {
     try { localStorage.setItem(VOCAB_KEY, JSON.stringify(savedVocab)); } catch (e) {}
 }
 
-// -------------------------------------------------------------
-// [기능 5] STT (Speech-To-Text) 음성 인식 관련 로직
-// -------------------------------------------------------------
+// 사용 설명서 모달 열기/닫기
+function openHelpModal() {
+    document.getElementById('helpModal').style.display = 'flex';
+}
+function closeHelpModal() {
+    document.getElementById('helpModal').style.display = 'none';
+}
+
+// STT (Speech-To-Text) 음성 인식 로직
 function initSTT() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -547,7 +617,7 @@ function initSTT() {
     }
 
     recognition = new SpeechRecognition();
-    recognition.lang = 'ko-KR'; // 기본 한국어 인식
+    recognition.lang = 'ko-KR';
     recognition.interimResults = false;
 
     recognition.onstart = () => {
@@ -592,9 +662,7 @@ function stopSTT() {
     micBtn.textContent = '🎤';
 }
 
-// -------------------------------------------------------------
-// [기능 1] 단어장 / 문장 스크랩 로직
-// -------------------------------------------------------------
+// 단어장 / 문장 스크랩 로직
 function scrapCurrentResult() {
     const currentRoom = rooms.find(r => r.id === activeRoomId);
     if (!currentRoom || !currentRoom.lastResult) {
@@ -656,9 +724,7 @@ function renderVocabList() {
     });
 }
 
-// -------------------------------------------------------------
-// [기능 4] 대화 내역 내보내기 (TXT / CSV)
-// -------------------------------------------------------------
+// 대화 내역 내보내기 (TXT / CSV)
 function exportChat(format) {
     const currentRoom = rooms.find(r => r.id === activeRoomId);
     if (!currentRoom || !currentRoom.uiBubbles || currentRoom.uiBubbles.length === 0) {
@@ -678,7 +744,7 @@ function exportChat(format) {
         });
     } else if (format === 'csv') {
         mimeType = 'text/csv';
-        fileContent = '\uFEFF'; // UTF-8 BOM 추가 (엑셀 한글 깨짐 방지)
+        fileContent = '\uFEFF';
         fileContent += '역할,내용\n';
         currentRoom.uiBubbles.forEach(b => {
             const roleStr = b.role === 'user' ? '사용자' : 'AI';
@@ -694,9 +760,7 @@ function exportChat(format) {
     link.click();
 }
 
-// -------------------------------------------------------------
 // 대화방 및 UI 관리 로직
-// -------------------------------------------------------------
 function createNewRoom() {
     const newRoom = {
         id: 'room_' + Date.now(),
@@ -781,7 +845,7 @@ function renderChatHistory(room) {
     if (!room.uiBubbles || room.uiBubbles.length === 0) {
         historyContainer.innerHTML = `
             <div class="chat-bubble model">
-                안녕하세요! 학습할 문장을 입력하거나 마이크 버튼을 눌러 음성으로 질문해 보세요.
+                안녕하세요! 학습할 문장을 입력하거나 마이크 버튼을 눌러 음성으로 질문해 보세요. (우상단 ❓ 사용 설명서를 참고하세요!)
             </div>`;
         return;
     }
