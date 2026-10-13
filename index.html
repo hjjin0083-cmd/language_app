@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4개 국어 대화형 학습기</title>
+    <title>4개 국어 대화형 학습기 & 노트</title>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -13,7 +13,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 900px;
+            max-width: 950px;
             margin: auto;
             background: white;
             padding: 25px;
@@ -35,7 +35,8 @@
         .header-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         .lang-select {
             padding: 8px 12px;
@@ -47,16 +48,20 @@
             color: #1e293b;
             cursor: pointer;
         }
-
-        .reset-btn {
-            background-color: #e74c3c;
+        .action-btn {
+            background-color: #3b82f6;
             color: white;
             border: none;
-            padding: 8px 15px;
+            padding: 8px 14px;
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
+            font-weight: bold;
         }
+        .action-btn:hover { background-color: #2563eb; }
+        .notebook-btn { background-color: #8b5cf6; }
+        .notebook-btn:hover { background-color: #7c3aed; }
+        .reset-btn { background-color: #e74c3c; }
         .reset-btn:hover { background-color: #c0392b; }
 
         /* 대화창 스타일 */
@@ -89,16 +94,32 @@
             line-height: 1.4;
             word-break: break-word;
         }
+        .user-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 4px;
+        }
         .user-toggle-btn {
             background: none;
             border: none;
             color: #64748b;
             font-size: 11px;
             cursor: pointer;
-            margin-top: 4px;
-            padding: 2px 6px;
+            padding: 2px 4px;
         }
         .user-toggle-btn:hover { text-decoration: underline; color: #2563eb; }
+        .save-note-btn {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .save-note-btn:hover { background: #d97706; }
 
         .user-translation-card {
             display: none;
@@ -168,12 +189,7 @@
         }
         .ai-sub-info { font-size: 12px; color: #64748b; margin-top: 2px; }
 
-        .speaker-btn {
-            background: none;
-            border: none;
-            font-size: 16px;
-            cursor: pointer;
-        }
+        .speaker-btn { background: none; border: none; font-size: 16px; cursor: pointer; }
 
         .meta-note {
             margin-top: 10px;
@@ -223,6 +239,63 @@
             border-radius: 6px;
             font-size: 13px;
         }
+
+        /* 학습 노트 모달 창 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-card {
+            background: white;
+            width: 90%;
+            max-width: 700px;
+            max-height: 85vh;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .note-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px;
+            position: relative;
+        }
+        .note-delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .note-delete-btn:hover { background: #dc2626; }
     </style>
 </head>
 <body>
@@ -230,14 +303,14 @@
     <div class="header">
         <h2>💬 4개 국어 AI 다자간 회화 학습기</h2>
         <div class="header-controls">
-            <!-- 사용자 언어 선택 -->
             <select id="userLangSelect" class="lang-select">
                 <option value="korean" selected>🇰🇷 한국어로 대화</option>
                 <option value="english">🇺🇸 영어로 대화</option>
                 <option value="japanese">🇯🇵 일본어로 대화</option>
                 <option value="chinese">🇨🇳 중국어로 대화</option>
             </select>
-            <button class="reset-btn" onclick="resetChat()">새 대화</button>
+            <button class="action-btn notebook-btn" onclick="openNotebookModal()">📒 학습 노트 보기</button>
+            <button class="action-btn reset-btn" onclick="resetChat()">새 대화</button>
         </div>
     </div>
 
@@ -246,7 +319,7 @@
         <div class="ai-wrapper">
             <div class="ai-profile">🤖 AI 4개 국어 대화 팀</div>
             <div class="ai-card-container">
-                <div class="ai-lang-text">원하시는 언어를 선택하고 대화를 시작하세요! 사용자가 어떤 언어로 말하든 AI가 모두 알아듣고 4개 국어로 맞장구를 쳐줍니다.</div>
+                <div class="ai-lang-text">대화 중 마음에 드는 표현은 '📒 노트에 저장' 버튼을 눌러 학습 노트에 담아두고 복습할 수 있습니다!</div>
             </div>
         </div>
     </div>
@@ -262,8 +335,22 @@
     </div>
 </div>
 
+<!-- 학습 노트 모달 팝업 -->
+<div class="modal-overlay" id="notebookModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 style="margin: 0; color: #1e293b;">📒 나의 저장된 학습 노트</h3>
+            <button class="action-btn" onclick="closeNotebookModal()" style="padding: 4px 10px; font-size: 12px;">닫기 ✖</button>
+        </div>
+        <div class="modal-body" id="notebookList">
+            <div style="text-align: center; color: #64748b; padding: 20px;">저장된 노트가 없습니다.</div>
+        </div>
+    </div>
+</div>
+
 <script>
 let conversationHistory = [];
+let currentTurnData = null; // 최신 대화 데이터를 임시 저장하여 노트에 저장할 때 사용
 
 function speakDirect(text, langCode) {
     if (!text || !('speechSynthesis' in window)) return;
@@ -301,9 +388,12 @@ function appendUserMessage(userText, userAnalysis, selectedLang) {
     const htmlContent = `
         <div style="font-size:11px; color:#64748b; margin-bottom:2px;">[${langBadges[selectedLang] || '내 언어'}]</div>
         <div class="chat-bubble-user">${escapeHtml(userText)}</div>
-        <button class="user-toggle-btn" onclick="toggleUserTranslation('${toggleId}')">
-            🌐 내 문장 4개국어 분석 보기 ▾
-        </button>
+        <div class="user-controls">
+            <button class="save-note-btn" onclick="saveCurrentToNotebook()">📒 노트에 저장</button>
+            <button class="user-toggle-btn" onclick="toggleUserTranslation('${toggleId}')">
+                🌐 분석 보기 ▾
+            </button>
+        </div>
         <div id="${toggleId}" class="user-translation-card">
             <div class="trans-header">✨ 내 문장 4개 국어 대조</div>
             <div class="trans-item">🇰🇷 <strong>KO:</strong> ${escapeHtml(userAnalysis?.korean || '')}</div>
@@ -372,8 +462,101 @@ function appendAIMessage(data) {
     historyContainer.scrollTop = historyContainer.scrollHeight;
 }
 
+// 학습 노트 저장 API 호출
+async function saveCurrentToNotebook() {
+    if (!currentTurnData) {
+        alert('저장할 대화 내용이 없습니다.');
+        return;
+    }
+
+    const noteItem = {
+        id: 'note_' + Date.now(),
+        date: new Date().toLocaleString(),
+        selected_lang: currentTurnData.selected_lang,
+        user_text: currentTurnData.user_text,
+        user_analysis: currentTurnData.user_analysis,
+        ai_response: currentTurnData.languages,
+        contrast_note: currentTurnData.metadata?.contrast_note || ''
+    };
+
+    try {
+        const res = await fetch('/api/notebook', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(noteItem)
+        });
+        if (res.ok) {
+            alert('📒 학습 노트에 성공적으로 저장되었습니다!');
+        } else {
+            alert('노트 저장 중 오류가 발생했습니다.');
+        }
+    } catch (e) {
+        alert('네트워크 오류가 발생했습니다.');
+    }
+}
+
+// 학습 노트 불러오기 및 모달 열기
+async function openNotebookModal() {
+    const modal = document.getElementById('notebookModal');
+    const listEl = document.getElementById('notebookList');
+    listEl.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">불러오는 중...</div>';
+    modal.style.display = 'flex';
+
+    try {
+        const res = await fetch('/api/notebook');
+        const notes = await res.json();
+        
+        listEl.innerHTML = '';
+        if (!notes || notes.length === 0) {
+            listEl.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">저장된 학습 노트가 없습니다. 대화 중 노트 저장을 눌러보세요!</div>';
+            return;
+        }
+
+        notes.forEach(note => {
+            const div = document.createElement('div');
+            div.className = 'note-item';
+            div.innerHTML = `
+                <button class="note-delete-btn" onclick="deleteNotebookItem('${note.id}')">삭제</button>
+                <div style="font-size:11px; color:#64748b; margin-bottom:4px;">📅 ${note.date} (사용 언어: ${note.selected_lang})</div>
+                <div style="font-weight:bold; color:#1e293b; margin-bottom:6px;">💬 내 표현: "${escapeHtml(note.user_text)}"</div>
+                <div style="font-size:13px; background:#fff; padding:8px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:6px;">
+                    <div>🇰🇷 KO: ${escapeHtml(note.user_analysis?.korean)}</div>
+                    <div>🇺🇸 EN: ${escapeHtml(note.user_analysis?.english?.text)}</div>
+                    <div>🇨🇳 CN: ${escapeHtml(note.user_analysis?.chinese?.text)}</div>
+                    <div>🇯🇵 JP: ${escapeHtml(note.user_analysis?. японская || note.user_analysis?.japanese?.text)}</div>
+                </div>
+                <div style="font-size:13px; background:#f0fdf4; padding:8px; border-radius:6px; border:1px solid #bbf7d0;">
+                    <div style="font-weight:bold; color:#166534; margin-bottom:2px;">🤖 AI 대답 핵심</div>
+                    <div>🇰🇷 ${escapeHtml(note.ai_response?.korean?.text)}</div>
+                    <div>🇺🇸 ${escapeHtml(note.ai_response?.english?.text)}</div>
+                </div>
+            `;
+            listEl.appendChild(div);
+        });
+    } catch (e) {
+        listEl.innerHTML = '<div style="text-align:center; color:#ef4444; padding:20px;">노트를 불러오는 중 오류가 발생했습니다.</div>';
+    }
+}
+
+async function deleteNotebookItem(noteId) {
+    if (!confirm('이 노트를 삭제하시겠습니까?')) return;
+    try {
+        const res = await fetch(`/api/notebook/${noteId}`, { method: 'DELETE' });
+        if (res.ok) {
+            openNotebookModal(); // 목록 새로고침
+        }
+    } catch (e) {
+        alert('삭제 중 오류가 발생했습니다.');
+    }
+}
+
+function closeNotebookModal() {
+    document.getElementById('notebookModal').style.display = 'none';
+}
+
 function resetChat() {
     conversationHistory = [];
+    currentTurnData = null;
     document.getElementById('chatHistory').innerHTML = `
         <div class="ai-wrapper">
             <div class="ai-profile">🤖 AI 4개 국어 대화 팀</div>
@@ -427,6 +610,13 @@ async function sendQuery() {
         if (!response.ok) {
             throw new Error(data.detail || `서버 오류 발생 (${response.status})`);
         }
+
+        // 현재 턴 데이터 임시 저장 (노트 저장용)
+        currentTurnData = {
+            user_text: text,
+            selected_lang: selectedLang,
+            ...data
+        };
 
         appendUserMessage(text, data.user_analysis, selectedLang);
         appendAIMessage(data);
