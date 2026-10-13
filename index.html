@@ -253,7 +253,7 @@
         .modal-card {
             background: white;
             width: 90%;
-            max-width: 700px;
+            max-width: 750px;
             max-height: 85vh;
             border-radius: 12px;
             padding: 20px;
@@ -268,6 +268,11 @@
             border-bottom: 2px solid #eee;
             padding-bottom: 10px;
             margin-bottom: 15px;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
         .modal-body {
             flex: 1;
@@ -296,6 +301,17 @@
             cursor: pointer;
         }
         .note-delete-btn:hover { background: #dc2626; }
+        .word-download-btn {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .word-download-btn:hover { background-color: #1d4ed8; }
     </style>
 </head>
 <body>
@@ -340,7 +356,10 @@
     <div class="modal-card">
         <div class="modal-header">
             <h3 style="margin: 0; color: #1e293b;">📒 나의 저장된 학습 노트</h3>
-            <button class="action-btn" onclick="closeNotebookModal()" style="padding: 4px 10px; font-size: 12px;">닫기 ✖</button>
+            <div class="modal-actions">
+                <button class="word-download-btn" onclick="downloadWordDocument()">📄 워드(.doc) 다운로드</button>
+                <button class="action-btn" onclick="closeNotebookModal()" style="padding: 6px 10px; font-size: 12px;">닫기 ✖</button>
+            </div>
         </div>
         <div class="modal-body" id="notebookList">
             <div style="text-align: center; color: #64748b; padding: 20px;">저장된 노트가 없습니다.</div>
@@ -350,7 +369,8 @@
 
 <script>
 let conversationHistory = [];
-let currentTurnData = null; // 최신 대화 데이터를 임시 저장하여 노트에 저장할 때 사용
+let currentTurnData = null; 
+let cachedNotes = []; // 다운로드용 노트 캐시
 
 function speakDirect(text, langCode) {
     if (!text || !('speechSynthesis' in window)) return;
@@ -462,7 +482,6 @@ function appendAIMessage(data) {
     historyContainer.scrollTop = historyContainer.scrollHeight;
 }
 
-// 학습 노트 저장 API 호출
 async function saveCurrentToNotebook() {
     if (!currentTurnData) {
         alert('저장할 대화 내용이 없습니다.');
@@ -495,7 +514,6 @@ async function saveCurrentToNotebook() {
     }
 }
 
-// 학습 노트 불러오기 및 모달 열기
 async function openNotebookModal() {
     const modal = document.getElementById('notebookModal');
     const listEl = document.getElementById('notebookList');
@@ -504,32 +522,40 @@ async function openNotebookModal() {
 
     try {
         const res = await fetch('/api/notebook');
-        const notes = await res.json();
+        cachedNotes = await res.json();
         
         listEl.innerHTML = '';
-        if (!notes || notes.length === 0) {
+        if (!cachedNotes || cachedNotes.length === 0) {
             listEl.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">저장된 학습 노트가 없습니다. 대화 중 노트 저장을 눌러보세요!</div>';
             return;
         }
 
-        notes.forEach(note => {
+        cachedNotes.forEach(note => {
             const div = document.createElement('div');
             div.className = 'note-item';
             div.innerHTML = `
                 <button class="note-delete-btn" onclick="deleteNotebookItem('${note.id}')">삭제</button>
                 <div style="font-size:11px; color:#64748b; margin-bottom:4px;">📅 ${note.date} (사용 언어: ${note.selected_lang})</div>
                 <div style="font-weight:bold; color:#1e293b; margin-bottom:6px;">💬 내 표현: "${escapeHtml(note.user_text)}"</div>
+                
+                <!-- 내 표현 4개 국어 분석 -->
                 <div style="font-size:13px; background:#fff; padding:8px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:6px;">
+                    <div style="font-weight:bold; color:#2563eb; margin-bottom:2px;">✨ 내 표현 4개 국어 대조</div>
                     <div>🇰🇷 KO: ${escapeHtml(note.user_analysis?.korean)}</div>
                     <div>🇺🇸 EN: ${escapeHtml(note.user_analysis?.english?.text)}</div>
-                    <div>🇨🇳 CN: ${escapeHtml(note.user_analysis?.chinese?.text)}</div>
-                    <div>🇯🇵 JP: ${escapeHtml(note.user_analysis?. японская || note.user_analysis?.japanese?.text)}</div>
+                    <div>🇨🇳 CN: ${escapeHtml(note.user_analysis?.chinese?.text)} ${note.user_analysis?.chinese?.pronunciation ? `(${escapeHtml(note.user_analysis.chinese.pronunciation)})` : ''}</div>
+                    <div>🇯🇵 JP: ${escapeHtml(note.user_analysis?.japanese?.text)} ${note.user_analysis?.japanese?.pronunciation ? `(${escapeHtml(note.user_analysis.japanese.pronunciation)})` : ''}</div>
                 </div>
+
+                <!-- AI 대답 4개 국어 핵심 (수정 완료) -->
                 <div style="font-size:13px; background:#f0fdf4; padding:8px; border-radius:6px; border:1px solid #bbf7d0;">
-                    <div style="font-weight:bold; color:#166534; margin-bottom:2px;">🤖 AI 대답 핵심</div>
-                    <div>🇰🇷 ${escapeHtml(note.ai_response?.korean?.text)}</div>
-                    <div>🇺🇸 ${escapeHtml(note.ai_response?.english?.text)}</div>
+                    <div style="font-weight:bold; color:#166534; margin-bottom:2px;">🤖 AI 대답 4개 국어 핵심</div>
+                    <div>🇰🇷 KO: ${escapeHtml(note.ai_response?.korean?.text)}</div>
+                    <div>🇺🇸 EN: ${escapeHtml(note.ai_response?.english?.text)}</div>
+                    <div>🇨🇳 CN: ${escapeHtml(note.ai_response?.chinese?.text)} ${note.ai_response?.chinese?.pronunciation ? `(${escapeHtml(note.ai_response.chinese.pronunciation)})` : ''}</div>
+                    <div>🇯🇵 JP: ${escapeHtml(note.ai_response?.japanese?.text)} ${note.ai_response?.japanese?.pronunciation ? `(${escapeHtml(note.ai_response.japanese.pronunciation)})` : ''}</div>
                 </div>
+                ${note.contrast_note ? `<div style="font-size:12px; color:#78350f; margin-top:6px; background:#fffbe3; padding:6px; border-radius:4px;">💡 ${escapeHtml(note.contrast_note)}</div>` : ''}
             `;
             listEl.appendChild(div);
         });
@@ -538,12 +564,76 @@ async function openNotebookModal() {
     }
 }
 
+// MS 워드(.doc) 다운로드 기능 추가
+function downloadWordDocument() {
+    if (!cachedNotes || cachedNotes.length === 0) {
+        alert('다운로드할 학습 노트가 없습니다.');
+        return;
+    }
+
+    let htmlContent = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/1999/xhtml">
+        <head>
+            <meta charset="utf-8">
+            <title>4개 국어 학습 노트</title>
+            <style>
+                body { font-family: 'Malgun Gothic', sans-serif; line-height: 1.6; color: #333; }
+                .note-box { border: 1px solid #cbd5e1; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #f8fafc; }
+                .title { font-weight: bold; color: #1e293b; font-size: 16px; margin-bottom: 5px; }
+                .sub-box { background: #fff; border: 1px solid #e2e8f0; padding: 10px; margin-top: 8px; border-radius: 4px; }
+                .ai-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; margin-top: 8px; border-radius: 4px; }
+            </style>
+        </head>
+        <body>
+            <h1 style="color: #2563eb; text-align: center;">📒 4개 국어 다자간 학습 노트</h1>
+            <hr style="border:1px solid #cbd5e1; margin-bottom: 20px;">
+    `;
+
+    cachedNotes.forEach((note, index) => {
+        htmlContent += `
+            <div class="note-box">
+                <div style="font-size: 12px; color: #64748b;">[${index + 1}] 저장 일시: ${note.date} (사용 언어: ${note.selected_lang})</div>
+                <div class="title" style="margin-top: 6px;">💬 내 표현: "${note.user_text}"</div>
+                
+                <div class="sub-box">
+                    <strong>✨ 내 표현 4개 국어 대조</strong><br>
+                    • 🇰🇷 KO: ${note.user_analysis?.korean || ''}<br>
+                    • 🇺🇸 EN: ${note.user_analysis?.english?.text || ''}<br>
+                    • 🇨🇳 CN: ${note.user_analysis?.chinese?.text || ''} ${note.user_analysis?.chinese?.pronunciation ? `(${note.user_analysis.chinese.pronunciation})` : ''}<br>
+                    • 🇯🇵 JP: ${note.user_analysis?.japanese?.text || ''} ${note.user_analysis?.japanese?.pronunciation ? `(${note.user_analysis.japanese.pronunciation})` : ''}
+                </div>
+
+                <div class="ai-box">
+                    <strong>🤖 AI 대답 4개 국어 핵심</strong><br>
+                    • 🇰🇷 KO: ${note.ai_response?.korean?.text || ''}<br>
+                    • 🇺🇸 EN: ${note.ai_response?.english?.text || ''}<br>
+                    • 🇨🇳 CN: ${note.ai_response?.chinese?.text || ''} ${note.ai_response?.chinese?.pronunciation ? `(${note.ai_response.chinese.pronunciation})` : ''}<br>
+                    • 🇯🇵 JP: ${note.ai_response?.japanese?.text || ''} ${note.ai_response?.japanese?.pronunciation ? `(${note.ai_response.japanese.pronunciation})` : ''}
+                </div>
+                ${note.contrast_note ? `<div style="margin-top:8px; font-size:13px; color:#78350f;">💡 <strong>포인트:</strong> ${note.contrast_note}</div>` : ''}
+            </div>
+        `;
+    });
+
+    htmlContent += `</body></html>`;
+
+    const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `4개국어_학습노트_${new Date().toISOString().slice(0, 10)}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
 async function deleteNotebookItem(noteId) {
     if (!confirm('이 노트를 삭제하시겠습니까?')) return;
     try {
         const res = await fetch(`/api/notebook/${noteId}`, { method: 'DELETE' });
         if (res.ok) {
-            openNotebookModal(); // 목록 새로고침
+            openNotebookModal(); 
         }
     } catch (e) {
         alert('삭제 중 오류가 발생했습니다.');
@@ -611,7 +701,6 @@ async function sendQuery() {
             throw new Error(data.detail || `서버 오류 발생 (${response.status})`);
         }
 
-        // 현재 턴 데이터 임시 저장 (노트 저장용)
         currentTurnData = {
             user_text: text,
             selected_lang: selectedLang,
