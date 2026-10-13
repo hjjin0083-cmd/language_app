@@ -61,6 +61,8 @@
         .action-btn:hover { background-color: #2563eb; }
         .notebook-btn { background-color: #8b5cf6; }
         .notebook-btn:hover { background-color: #7c3aed; }
+        .help-btn { background-color: #e67e22; }
+        .help-btn:hover { background-color: #d35400; }
         .reset-btn { background-color: #e74c3c; }
         .reset-btn:hover { background-color: #c0392b; }
 
@@ -240,7 +242,7 @@
             font-size: 13px;
         }
 
-        /* 학습 노트 모달 창 */
+        /* 모달 공통 스타일 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -312,6 +314,17 @@
             cursor: pointer;
         }
         .word-download-btn:hover { background-color: #1d4ed8; }
+
+        /* 사용 설명서 본문 스타일 */
+        .guide-section {
+            background: #f8fafc;
+            border-left: 4px solid #3b82f6;
+            padding: 12px 15px;
+            border-radius: 6px;
+        }
+        .guide-section h4 { margin: 0 0 6px 0; color: #1e293b; font-size: 15px; }
+        .guide-section ul { margin: 0; padding-left: 20px; color: #475569; }
+        .guide-section li { margin-bottom: 4px; font-size: 14px; }
     </style>
 </head>
 <body>
@@ -325,6 +338,7 @@
                 <option value="japanese">🇯🇵 일본어로 대화</option>
                 <option value="chinese">🇨🇳 중국어로 대화</option>
             </select>
+            <button class="action-btn help-btn" onclick="openHelpModal()">❓ 사용 설명서</button>
             <button class="action-btn notebook-btn" onclick="openNotebookModal()">📒 학습 노트 보기</button>
             <button class="action-btn reset-btn" onclick="resetChat()">새 대화</button>
         </div>
@@ -335,7 +349,7 @@
         <div class="ai-wrapper">
             <div class="ai-profile">🤖 AI 4개 국어 대화 팀</div>
             <div class="ai-card-container">
-                <div class="ai-lang-text">대화 중 마음에 드는 표현은 '📒 노트에 저장' 버튼을 눌러 학습 노트에 담아두고 복습할 수 있습니다!</div>
+                <div class="ai-lang-text">환영합니다! 상단에서 언어를 선택하고 대화를 시작해 보세요. 우측 상단의 '사용 설명서'를 누르면 상세 가이드를 볼 수 있습니다.</div>
             </div>
         </div>
     </div>
@@ -348,6 +362,44 @@
                placeholder="선택한 언어로 자유롭게 말해보세요..."
                onkeydown="if(event.key === 'Enter') sendQuery()">
         <button class="send-btn" id="sendBtn" onclick="sendQuery()">보내기</button>
+    </div>
+</div>
+
+<!-- 사용 설명서 모달 팝업 -->
+<div class="modal-overlay" id="helpModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 style="margin: 0; color: #1e293b;">📖 4개 국어 학습기 사용 설명서</h3>
+            <button class="action-btn" onclick="closeHelpModal()" style="padding: 6px 10px; font-size: 12px;">닫기 ✖</button>
+        </div>
+        <div class="modal-body">
+            <div class="guide-section">
+                <h4>1. 다자간 언어 선택 및 대화</h4>
+                <ul>
+                    <li>상단 드롭다운 메뉴에서 대화할 언어(한국어, 영어, 일본어, 중국어)를 선택합니다.</li>
+                    <li>선택한 언어로 메시지를 입력하면, AI가 그 말을 완벽히 이해하고 4개 국어(한국어, 영어, 중국어, 일본어)로 동시에 대답합니다.</li>
+                </ul>
+            </div>
+            <div class="guide-section">
+                <h4>2. 내 표현 4개 국어 대조 분석</h4>
+                <ul>
+                    <li>내가 보낸 메시지 하단의 <strong>'🌐 분석 보기'</strong> 버튼을 누르면 내 문장이 4개 국어(발음 포함)로 어떻게 변환되는지 비교할 수 있습니다.</li>
+                </ul>
+            </div>
+            <div class="guide-section">
+                <h4>3. 🔊 원어민 발음 듣기 (TTS)</h4>
+                <ul>
+                    <li>AI 대답 카드 상단에 있는 <strong>🔊 스피커 버튼</strong>을 클릭하면 각 언어별 원어민 발음을 들을 수 있습니다.</li>
+                </ul>
+            </div>
+            <div class="guide-section">
+                <h4>4. 📒 학습 노트 저장 및 워드 다운로드</h4>
+                <ul>
+                    <li>마음에 드는 대화 턴의 <strong>'📒 노트에 저장'</strong> 버튼을 눌러 학습 노트에 보관합니다.</li>
+                    <li>상단 <strong>'📒 학습 노트 보기'</strong>를 눌러 저장된 목록을 확인하고, <strong>'📄 워드(.doc) 다운로드'</strong> 버튼으로 파일로 간편하게 백업하여 복습할 수 있습니다.</li>
+                </ul>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -370,7 +422,7 @@
 <script>
 let conversationHistory = [];
 let currentTurnData = null; 
-let cachedNotes = []; // 다운로드용 노트 캐시
+let cachedNotes = [];
 
 function speakDirect(text, langCode) {
     if (!text || !('speechSynthesis' in window)) return;
@@ -395,6 +447,14 @@ function showError(msg) {
 function toggleUserTranslation(id) {
     const el = document.getElementById(id);
     if (el) el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
+}
+
+// 사용 설명서 모달 열기/닫기
+function openHelpModal() {
+    document.getElementById('helpModal').style.display = 'flex';
+}
+function closeHelpModal() {
+    document.getElementById('helpModal').style.display = 'none';
 }
 
 function appendUserMessage(userText, userAnalysis, selectedLang) {
@@ -538,7 +598,6 @@ async function openNotebookModal() {
                 <div style="font-size:11px; color:#64748b; margin-bottom:4px;">📅 ${note.date} (사용 언어: ${note.selected_lang})</div>
                 <div style="font-weight:bold; color:#1e293b; margin-bottom:6px;">💬 내 표현: "${escapeHtml(note.user_text)}"</div>
                 
-                <!-- 내 표현 4개 국어 분석 -->
                 <div style="font-size:13px; background:#fff; padding:8px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:6px;">
                     <div style="font-weight:bold; color:#2563eb; margin-bottom:2px;">✨ 내 표현 4개 국어 대조</div>
                     <div>🇰🇷 KO: ${escapeHtml(note.user_analysis?.korean)}</div>
@@ -547,7 +606,6 @@ async function openNotebookModal() {
                     <div>🇯🇵 JP: ${escapeHtml(note.user_analysis?.japanese?.text)} ${note.user_analysis?.japanese?.pronunciation ? `(${escapeHtml(note.user_analysis.japanese.pronunciation)})` : ''}</div>
                 </div>
 
-                <!-- AI 대답 4개 국어 핵심 (수정 완료) -->
                 <div style="font-size:13px; background:#f0fdf4; padding:8px; border-radius:6px; border:1px solid #bbf7d0;">
                     <div style="font-weight:bold; color:#166534; margin-bottom:2px;">🤖 AI 대답 4개 국어 핵심</div>
                     <div>🇰🇷 KO: ${escapeHtml(note.ai_response?.korean?.text)}</div>
@@ -564,7 +622,6 @@ async function openNotebookModal() {
     }
 }
 
-// MS 워드(.doc) 다운로드 기능 추가
 function downloadWordDocument() {
     if (!cachedNotes || cachedNotes.length === 0) {
         alert('다운로드할 학습 노트가 없습니다.');
