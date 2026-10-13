@@ -16,6 +16,9 @@ app = FastAPI(title="4개 국어 대화형 학습기")
 api_key = os.environ.get("GEMINI_API_KEY", "").strip()
 client = genai.Client(api_key=api_key) if api_key else None
 
+# 학습 노트 저장 파일 경로
+NOTEBOOK_FILE = BASE_DIR / "study_notebook.json"
+
 
 class SimpleLanguageDetail(BaseModel):
     text: str = Field(description="해당 언어로 번역/보정된 문장")
@@ -58,29 +61,86 @@ class MetadataDetail(BaseModel):
 class MultiLingualResponse(BaseModel):
     original_input: str
     selected_language: str
-    user_analysis: UserAnalysisDict = Field(
-        description="사용자가 선택한 언어로 말한 문장에 대한 4개 국어 대조 분석"
-    )
-    languages: LanguagesDict = Field(
-        description="사용자의 말에 대해 4개 국어로 응답하는 AI 대답"
-    )
+    user_analysis: UserAnalysisDict
+    languages: LanguagesDict
     metadata: MetadataDetail
 
 
 class ChatMessage(BaseModel):
-    role: str  # 'user' 또는 'model'
+    role: str
     content: str
 
 
 class UserInput(BaseModel):
     text: str
-    selected_lang: Optional[str] = "korean"  # 'korean', 'english', 'japanese', 'chinese'
+    selected_lang: Optional[str] = "korean"
     history: Optional[List[ChatMessage]] = []
+
+
+class StudyNoteItem(BaseModel):
+    id: str
+    date: str
+    selected_lang: str
+    user_text: str
+    user_analysis: UserAnalysisDict
+    ai_response: LanguagesDict
+    contrast_note: Optional[str] = None
 
 
 @app.get("/")
 async def get_ui():
     return FileResponse(BASE_DIR / "index.html")
+
+
+@app.get("/api/notebook", response_model=List[StudyNoteItem])
+async def get_notebook():
+    if not NOTEBOOK_FILE.exists():
+        return []
+    try:
+        with open(NOTEBOOK_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+@app.post("/api/notebook", response_model=List[StudyNoteItem])
+async def save_notebook(item: StudyNoteItem):
+    notes = []
+    if NOTEBOOK_FILE.exists():
+        try:
+            with open(NOTEBOOK_FILE, "r", encoding="utf-8") as f:
+                notes = json.load(f)
+        except Exception:
+            notes = []
+    
+    notes.insert(0, item.model_dump()) # 최신 노트를 상단에 추가
+    
+    try:
+        with open(NOTEBOOK_FILE, "w", encoding="utf-8") as f:
+            json.dump(notes, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"노트 저장 실패: {str(e)}")
+        
+    return notes
+
+
+@app.delete("/api/notebook/{note_id}", response_model=List[StudyNoteItem])
+async def delete_notebook_item(note_id: str):
+    if not NOTEBOOK_FILE.exists():
+        return []
+    
+    try:
+        with open(NOTEBOOK_FILE, "r", encoding="utf-8") as f:
+            notes = json.load(f)
+        
+        notes = [n for n in notes if n["id"] != note_id]
+        
+        with open(NOTEBOOK_FILE, "w", encoding="utf-8") as f:
+            json.dump(notes, f, ensure_ascii=False, indent=2)
+            
+        return notes
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"노트 삭제 실패: {str(e)}")
 
 
 def call_gemini_api(prompt_text: str, selected_lang: str, history: List[ChatMessage]) -> str:
@@ -118,11 +178,10 @@ def call_gemini_api(prompt_text: str, selected_lang: str, history: List[ChatMess
 
 2. `languages`:
    - 사용자가 한 말에 대해 친근한 대화 상대로서 4개 국어(한국어, 영어, 중국어, 일본어)로 대답을 작성하세요.
-   - 선택된 언어뿐만 아니라 나머지 3개 국어 사용자도 바로 알아들을 수 있도록 각 언어별로 자연스러운 회화체 대답을 구성해야 합니다.
    - 중국어와 일본어는 pronunciation을 작성하세요.
 
 3. `metadata.contrast_note`:
-   - 사용자가 선택한 [{user_lang_name}] 표현과 나머지 언어 간의 주요 어순(SOV/SVO) 차이 및 핵심 문법 표현을 한국어로 알기 쉽게 설명하세요.
+   - 사용자가 선택한 [{user_lang_name}] 표현과 다른 언어 간의 주요 어순(SOV/SVO) 차이 및 핵심 문법 표현을 한국어로 알기 쉽게 설명하세요.
 """
 
     response = client.models.generate_content(
