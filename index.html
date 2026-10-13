@@ -204,7 +204,7 @@
             white-space: pre-wrap;
         }
 
-        /* 입력바 */
+        /* 입력바 및 마이크 버튼 스타일 */
         .input-group { display: flex; gap: 10px; }
         input[type="text"] {
             flex: 1;
@@ -214,6 +214,27 @@
             border-radius: 8px;
             outline: none;
         }
+        .mic-btn {
+            background-color: #64748b;
+            color: white;
+            border: none;
+            padding: 0 16px;
+            font-size: 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .mic-btn:hover { background-color: #475569; }
+        .mic-btn.recording {
+            background-color: #ef4444;
+            animation: pulse 1.2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+
         .send-btn {
             padding: 15px 28px;
             font-size: 16px;
@@ -349,7 +370,7 @@
         <div class="ai-wrapper">
             <div class="ai-profile">🤖 AI 4개 국어 대화 팀</div>
             <div class="ai-card-container">
-                <div class="ai-lang-text">환영합니다! 상단에서 언어를 선택하고 대화를 시작해 보세요. 우측 상단의 '사용 설명서'를 누르면 상세 가이드를 볼 수 있습니다.</div>
+                <div class="ai-lang-text">환영합니다! 마이크(🎤) 버튼을 눌러 음성으로 대화를 시도해 보세요. (크롬 브라우저 권장)</div>
             </div>
         </div>
     </div>
@@ -359,8 +380,9 @@
 
     <div class="input-group">
         <input type="text" id="userInput"
-               placeholder="선택한 언어로 자유롭게 말해보세요..."
+               placeholder="선택한 언어로 자유롭게 말하거나 마이크를 누르세요..."
                onkeydown="if(event.key === 'Enter') sendQuery()">
+        <button class="mic-btn" id="micBtn" onclick="toggleSpeechRecognition()" title="음성 입력 시작/중지">🎤</button>
         <button class="send-btn" id="sendBtn" onclick="sendQuery()">보내기</button>
     </div>
 </div>
@@ -374,10 +396,10 @@
         </div>
         <div class="modal-body">
             <div class="guide-section">
-                <h4>1. 다자간 언어 선택 및 대화</h4>
+                <h4>1. 🎤 음성 입력 (STT) 및 텍스트 대화</h4>
                 <ul>
-                    <li>상단 드롭다운 메뉴에서 대화할 언어(한국어, 영어, 일본어, 중국어)를 선택합니다.</li>
-                    <li>선택한 언어로 메시지를 입력하면, AI가 그 말을 완벽히 이해하고 4개 국어(한국어, 영어, 중국어, 일본어)로 동시에 대답합니다.</li>
+                    <li>상단 드롭다운에서 대화할 언어를 선택합니다.</li>
+                    <li>입력창 옆 <strong>마이크(🎤) 버튼</strong>을 누르고 말하면 음성이 텍스트로 자동 입력됩니다. (다시 누르면 종료)</li>
                 </ul>
             </div>
             <div class="guide-section">
@@ -423,6 +445,80 @@
 let conversationHistory = [];
 let currentTurnData = null; 
 let cachedNotes = [];
+let recognition = null;
+let isRecording = false;
+
+// 음성 인식 (STT) 초기화 및 제어
+function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        console.warn("이 브라우저는 음성 인식을 지원하지 않습니다.");
+        return;
+    }
+
+    recognition = new SpeechRecognition();
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+        isRecording = true;
+        const micBtn = document.getElementById('micBtn');
+        micBtn.classList.add('recording');
+        micBtn.title = "듣고 있는 중... 중지하려면 누르세요";
+    };
+
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        document.getElementById('userInput').value = transcript;
+    };
+
+    recognition.onerror = (event) => {
+        console.error("음성 인식 오류:", event.error);
+        stopSpeechRecognition();
+    };
+
+    recognition.onend = () => {
+        stopSpeechRecognition();
+    };
+}
+
+function toggleSpeechRecognition() {
+    if (!recognition) {
+        alert('이 브라우저는 음성 입력을 지원하지 않습니다. Chrome 브라우저를 이용해 주세요.');
+        return;
+    }
+
+    // 선택한 언어에 맞춰 음성 인식 언어 설정 연동
+    const langSelect = document.getElementById('userLangSelect').value;
+    const langMap = {
+        korean: 'ko-KR',
+        english: 'en-US',
+        japanese: 'ja-JP',
+        chinese: 'zh-CN'
+    };
+    recognition.lang = langMap[langSelect] || 'ko-KR';
+
+    if (isRecording) {
+        recognition.stop();
+    } else {
+        try {
+            recognition.start();
+        } catch (e) {
+            recognition.stop();
+        }
+    }
+}
+
+function stopSpeechRecognition() {
+    isRecording = false;
+    const micBtn = document.getElementById('micBtn');
+    micBtn.classList.remove('recording');
+    micBtn.title = "음성 입력 시작/중지";
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    initSpeechRecognition();
+});
 
 function speakDirect(text, langCode) {
     if (!text || !('speechSynthesis' in window)) return;
@@ -449,7 +545,6 @@ function toggleUserTranslation(id) {
     if (el) el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
 }
 
-// 사용 설명서 모달 열기/닫기
 function openHelpModal() {
     document.getElementById('helpModal').style.display = 'flex';
 }
