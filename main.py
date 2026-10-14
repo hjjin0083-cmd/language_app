@@ -16,7 +16,6 @@ app = FastAPI(title="4개 국어 대화형 학습기")
 api_key = os.environ.get("GEMINI_API_KEY", "").strip()
 client = genai.Client(api_key=api_key) if api_key else None
 
-# 학습 노트 저장 파일 경로
 NOTEBOOK_FILE = BASE_DIR / "study_notebook.json"
 
 
@@ -113,7 +112,7 @@ async def save_notebook(item: StudyNoteItem):
         except Exception:
             notes = []
     
-    notes.insert(0, item.model_dump()) # 최신 노트를 상단에 추가
+    notes.insert(0, item.model_dump())
     
     try:
         with open(NOTEBOOK_FILE, "w", encoding="utf-8") as f:
@@ -164,8 +163,8 @@ def call_gemini_api(prompt_text: str, selected_lang: str, history: List[ChatMess
     user_lang_name = lang_names.get(selected_lang, "한국어")
 
     prompt = f"""
-당신은 4개 국어(한국어, 영어, 중국어, 일본어)를 자유자재로 구사하는 멀티 AI 튜터입니다.
-사용자는 현재 [{user_lang_name}]로 대화를 시도하고 있습니다.
+당신은 4개 국어(한국어, 영어, 중국어, 일본어)를 능숙하게 구사하는 멀티 AI 튜터입니다.
+사용자는 현재 학습 목적을 위해 메인 언어로 **[{user_lang_name}]**을(를) 선택하여 대화하고 있습니다.
 
 {history_str}
 [현재 사용자 입력 ({user_lang_name})]
@@ -173,19 +172,19 @@ def call_gemini_api(prompt_text: str, selected_lang: str, history: List[ChatMess
 
 [작성 지침]
 1. `user_analysis`:
-   - 사용자가 [{user_lang_name}]로 말한 문장을 정확히 이해하고, 4개 국어로 자연스럽게 대조 번역 및 보정하세요.
-   - 중국어와 일본어는 pronunciation(병음/성조, 히라가나 발음)을 반드시 포함하세요.
+   - 사용자가 [{user_lang_name}]로 입력한 문장을 정확히 파악하고, 어색한 부분이 있다면 자연스럽게 보정한 뒤 4개 국어로 대조 번역하세요.
+   - 중국어와 일본어는 반드시 pronunciation(병음/성조, 히라가나 발음)을 포함하세요.
 
 2. `languages`:
-   - 사용자가 한 말에 대해 친근한 대화 상대로서 4개 국어(한국어, 영어, 중국어, 일본어)로 대답을 작성하세요.
-   - 중국어와 일본어는 pronunciation을 작성하세요.
+   - 사용자의 [{user_lang_name}] 입력에 이어지는 친근하고 자연스러운 다자간 대화 답변을 4개 국어(한국어, 영어, 중국어, 일본어)로 각각 작성하세요.
+   - 중국어(병음)와 일본어(발음)는 pronunciation을 필히 작성하세요.
 
 3. `metadata.contrast_note`:
-   - 사용자가 선택한 [{user_lang_name}] 표현과 다른 언어 간의 주요 어순(SOV/SVO) 차이 및 핵심 문법 표현을 한국어로 알기 쉽게 설명하세요.
+   - 사용자가 선택한 [{user_lang_name}] 표현과 다른 언어 간의 어순 구조 차이(SOV vs SVO) 및 핵심 문법 포인트를 알기 쉽게 설명하세요.
 """
 
     response = client.models.generate_content(
-        model="gemini-3.5-flash-lite",
+        model="gemini-2.5-flash",
         contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
