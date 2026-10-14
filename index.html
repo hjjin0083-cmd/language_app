@@ -66,7 +66,6 @@
         .reset-btn { background-color: #e74c3c; }
         .reset-btn:hover { background-color: #c0392b; }
 
-        /* 대화창 스타일 */
         .chat-history {
             height: 500px;
             overflow-y: auto;
@@ -80,7 +79,6 @@
             gap: 16px;
         }
 
-        /* 유저 말풍선 */
         .user-wrapper {
             display: flex;
             flex-direction: column;
@@ -144,7 +142,6 @@
         }
         .trans-item { margin-bottom: 4px; }
 
-        /* AI 대답 영역 */
         .ai-wrapper {
             display: flex;
             flex-direction: column;
@@ -204,7 +201,6 @@
             white-space: pre-wrap;
         }
 
-        /* 입력바 및 마이크 버튼 스타일 */
         .input-group { display: flex; gap: 10px; }
         input[type="text"] {
             flex: 1;
@@ -263,7 +259,6 @@
             font-size: 13px;
         }
 
-        /* 모달 공통 스타일 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -395,7 +390,7 @@
         </div>
         <div class="modal-body">
             <div class="guide-section">
-                <h4>1. 🌐 대화 언어 선택의 중요성</h4>
+                <h4>1. 🌐 대화 언어 선택</h4>
                 <ul>
                     <li>상단에서 선택한 언어에 맞춰 <strong>마이크 음성 인식(STT) 언어</strong>가 해당 국가(영어, 일본어, 중국어, 한국어)로 즉시 변경됩니다.</li>
                     <li>AI 또한 선택된 언어를 사용자의 메인 주력 언어로 인식하여 대화 및 문법 교정 피드백을 제공합니다.</li>
@@ -457,14 +452,12 @@ function initSpeechRecognition() {
     recognition.onend = () => { stopSpeechRecognition(); };
 }
 
-// 언어 변경 시 음성 인식 언어 코드 실시간 반영
 function onLanguageChange() {
     if (!recognition) return;
     const langSelect = document.getElementById('userLangSelect').value;
     const langMap = { korean: 'ko-KR', english: 'en-US', japanese: 'ja-JP', chinese: 'zh-CN' };
     recognition.lang = langMap[langSelect] || 'ko-KR';
     
-    // 입력창 placeholder 안내 변경
     const placeholders = {
         korean: '한국어로 자유롭게 말하거나 마이크를 누르세요...',
         english: 'Speak in English or click mic...',
@@ -480,7 +473,7 @@ function toggleSpeechRecognition() {
         return;
     }
 
-    onLanguageChange(); // 현재 선택된 언어로 세팅
+    onLanguageChange();
 
     if (isRecording) {
         recognition.stop();
