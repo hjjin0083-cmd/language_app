@@ -526,14 +526,15 @@ function appendUserMessage(userText, userAnalysis, selectedLang, turnData) {
     const wrapper = document.createElement('div');
     wrapper.className = 'user-wrapper';
 
-    const toggleId = 'user-trans-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6);
+    const toggleId = 'user-trans-' + Date.now();
     const langBadges = { korean: '🇰🇷 KO', english: '🇺🇸 EN', japanese: '🇯🇵 JP', chinese: '🇨🇳 CN' };
+    const encodedData = encodeURIComponent(JSON.stringify(turnData));
 
     const htmlContent = `
         <div style="font-size:11px; color:#64748b; margin-bottom:2px;">[${langBadges[selectedLang] || '내 언어'}]</div>
         <div class="chat-bubble-user">${escapeHtml(userText)}</div>
         <div class="user-controls">
-            <button class="save-note-btn" onclick="saveTurnFromElement(this)">📒 노트에 저장</button>
+            <button class="save-note-btn" onclick="saveTurnToNotebook(decodeURIComponent('${encodedData}'))">📒 노트에 저장</button>
             <button class="user-toggle-btn" onclick="toggleUserTranslation('${toggleId}')">
                 🌐 분석 보기 ▾
             </button>
@@ -548,10 +549,6 @@ function appendUserMessage(userText, userAnalysis, selectedLang, turnData) {
     `;
 
     wrapper.innerHTML = htmlContent;
-    
-    // 각 턴별 데이터를 DOM 엘리먼트 자체에 안전하게 저장 (클로저 오염 원천 차단)
-    wrapper.dataset.turn = JSON.stringify(turnData);
-
     historyContainer.appendChild(wrapper);
     historyContainer.scrollTop = historyContainer.scrollHeight;
 }
@@ -610,15 +607,8 @@ function appendAIMessage(data) {
     historyContainer.scrollTop = historyContainer.scrollHeight;
 }
 
-// 해당 메시지 DOM에서 직접 데이터를 읽어와서 저장 (중복/마지막 턴 덮어쓰기 문제 해결)
-async function saveTurnFromElement(btnEl) {
-    const wrapper = btnEl.closest('.user-wrapper');
-    if (!wrapper || !wrapper.dataset.turn) {
-        alert('저장할 대화 데이터를 찾을 수 없습니다.');
-        return;
-    }
-
-    const turn = JSON.parse(wrapper.dataset.turn);
+async function saveTurnToNotebook(jsonString) {
+    const turn = JSON.parse(jsonString);
 
     const noteItem = {
         id: 'note_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
