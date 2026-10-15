@@ -3,23 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4개 국어 대화형 학습기 & 노트</title>
+    <title>4개 국어 대화형 학습기</title>
     <style>
         * { box-sizing: border-box; }
         body {
             font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: #f4f7f6;
             margin: 0;
+            padding: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 사이드바 (대화방 목록) */
+        .sidebar {
+            width: 280px;
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+            z-index: 100;
+        }
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid #34495e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sidebar-header h3 { margin: 0; font-size: 16px; }
+        .new-chat-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 13px;
+        }
+        .new-chat-btn:hover { background-color: #2980b9; }
+
+        .room-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .room-item {
+            padding: 10px 12px;
+            border-radius: 8px;
+            background-color: #34495e;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .room-item:hover, .room-item.active {
+            background-color: #1abc9c;
+        }
+        .room-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 170px;
+        }
+        .room-actions { display: flex; gap: 4px; opacity: 0.8; }
+        .room-actions span:hover { opacity: 1; }
+
+        /* 메인 컨텐츠 영역 */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow-y: auto;
             padding: 20px;
         }
         .container {
-            max-width: 950px;
-            margin: auto;
+            max-width: 1000px;
+            margin: 0 auto;
+            width: 100%;
             background: white;
-            padding: 25px;
+            padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            display: flex;
+            flex-direction: column;
+            min-height: 100%;
         }
+
         .header {
             display: flex;
             justify-content: space-between;
@@ -30,253 +109,218 @@
             flex-wrap: wrap;
             gap: 10px;
         }
-        h2 { margin: 0; color: #2c3e50; font-size: 20px; }
-        
-        .header-controls {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .lang-select {
-            padding: 8px 12px;
-            font-size: 14px;
-            border-radius: 6px;
-            border: 1px solid #cbd5e1;
-            background-color: #f8fafc;
-            font-weight: bold;
-            color: #1e293b;
-            cursor: pointer;
-        }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
         .action-btn {
-            background-color: #3b82f6;
+            background-color: #ecf0f1;
+            color: #2c3e50;
+            border: 1px solid #bdc3c7;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+        .action-btn:hover { background-color: #bdc3c7; }
+        .help-btn { background-color: #e67e22; color: white; border: none; }
+        .help-btn:hover { background-color: #d35400; }
+
+        .toggle-sidebar-btn {
+            display: none;
+            background: #2c3e50;
             color: white;
             border: none;
-            padding: 8px 14px;
+            padding: 6px 10px;
             border-radius: 6px;
+            font-size: 18px;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: bold;
         }
-        .action-btn:hover { background-color: #2563eb; }
-        .notebook-btn { background-color: #8b5cf6; }
-        .notebook-btn:hover { background-color: #7c3aed; }
-        .help-btn { background-color: #e67e22; }
-        .help-btn:hover { background-color: #d35400; }
-        .reset-btn { background-color: #e74c3c; }
-        .reset-btn:hover { background-color: #c0392b; }
+        h2 { margin: 0; color: #2c3e50; font-size: 20px; }
 
-        /* 대화창 스타일 */
+        /* 대화 히스토리 말풍선 */
         .chat-history {
-            height: 500px;
+            flex: 1;
+            min-height: 250px;
+            max-height: 450px;
             overflow-y: auto;
-            background: #f0f4f8;
+            background: #fafafa;
             border: 1px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 8px;
+            padding: 15px;
             margin-bottom: 15px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 10px;
         }
-
-        /* 유저 말풍선 */
-        .user-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            margin-left: 15%;
-        }
-        .chat-bubble-user {
-            background-color: #3b82f6;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 16px 16px 2px 16px;
+        .chat-bubble {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 12px;
             font-size: 15px;
             line-height: 1.4;
             word-break: break-word;
         }
-        .user-controls {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            margin-top: 4px;
-        }
-        .user-toggle-btn {
-            background: none;
-            border: none;
-            color: #64748b;
-            font-size: 11px;
-            cursor: pointer;
-            padding: 2px 4px;
-        }
-        .user-toggle-btn:hover { text-decoration: underline; color: #2563eb; }
-        .save-note-btn {
-            background: #f59e0b;
+        .chat-bubble.user {
+            align-self: flex-end;
+            background-color: #3498db;
             color: white;
-            border: none;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
-            font-weight: bold;
+            border-bottom-right-radius: 2px;
         }
-        .save-note-btn:hover { background: #d97706; }
-
-        .user-translation-card {
-            display: none;
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 10px;
-            padding: 12px;
-            width: 100%;
-            margin-top: 6px;
-            font-size: 13px;
-            color: #334155;
-        }
-        .trans-header {
-            font-weight: bold;
-            color: #2563eb;
-            margin-bottom: 6px;
-            border-bottom: 1px solid #e2e8f0;
-            padding-bottom: 4px;
-            font-size: 12px;
-        }
-        .trans-item { margin-bottom: 4px; }
-
-        /* AI 대답 영역 */
-        .ai-wrapper {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            margin-right: 10%;
-        }
-        .ai-profile {
-            font-size: 12px;
-            color: #64748b;
-            margin-bottom: 4px;
-            font-weight: bold;
-        }
-        .ai-card-container {
-            background: #ffffff;
-            border: 1px solid #cbd5e1;
-            border-radius: 2px 16px 16px 16px;
-            padding: 16px;
-            width: 100%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        }
-        .ai-lang-group {
-            padding: 8px 10px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-        }
-        .ai-lang-group:last-child { margin-bottom: 0; }
-        .sov-bg { background-color: #f0f9ff; border-left: 4px solid #0284c7; }
-        .svo-bg { background-color: #f0fdf4; border-left: 4px solid #16a34a; }
-        
-        .ai-lang-title {
-            font-size: 13px;
-            font-weight: bold;
-            color: #475569;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 4px;
-        }
-        .ai-lang-text {
-            font-size: 15px;
-            font-weight: 600;
-            color: #0f172a;
-            line-height: 1.4;
-        }
-        .ai-sub-info { font-size: 12px; color: #64748b; margin-top: 2px; }
-
-        .speaker-btn { background: none; border: none; font-size: 16px; cursor: pointer; }
-
-        .meta-note {
-            margin-top: 10px;
-            padding: 8px 12px;
-            background-color: #fffbe3;
-            border-left: 3px solid #f59e0b;
-            border-radius: 4px;
-            font-size: 12px;
-            color: #78350f;
-            white-space: pre-wrap;
+        .chat-bubble.model {
+            align-self: flex-start;
+            background-color: #e2e8f0;
+            color: #2c3e50;
+            border-bottom-left-radius: 2px;
         }
 
-        /* 입력바 및 마이크 버튼 스타일 */
-        .input-group { display: flex; gap: 10px; }
+        /* 입력 영역 및 STT 마이크 버튼 */
+        .input-group { display: flex; gap: 8px; margin-bottom: 15px; }
         input[type="text"] {
             flex: 1;
-            padding: 15px;
-            font-size: 16px;
+            padding: 12px 15px;
+            font-size: 15px;
             border: 1px solid #ccc;
             border-radius: 8px;
             outline: none;
         }
+        input[type="text"]:focus { border-color: #3498db; }
         .mic-btn {
-            background-color: #64748b;
+            background-color: #e74c3c;
             color: white;
             border: none;
             padding: 0 16px;
-            font-size: 20px;
+            font-size: 18px;
             border-radius: 8px;
             cursor: pointer;
             transition: background 0.2s;
         }
-        .mic-btn:hover { background-color: #475569; }
         .mic-btn.recording {
-            background-color: #ef4444;
+            background-color: #2ecc71;
             animation: pulse 1.2s infinite;
         }
         @keyframes pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.08); }
+            50% { transform: scale(1.05); }
             100% { transform: scale(1); }
         }
-
         .send-btn {
-            padding: 15px 28px;
-            font-size: 16px;
-            background-color: #1e293b;
+            padding: 12px 20px;
+            font-size: 15px;
+            background-color: #2c3e50;
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
+            transition: background 0.2s;
+            font-weight: bold;
         }
+        .send-btn:hover { background-color: #1a252f; }
+        .send-btn:disabled { background-color: #95a5a6; cursor: not-allowed; }
+
         .loading-box {
             display: none;
             text-align: center;
-            padding: 8px;
+            padding: 12px;
             font-weight: bold;
-            color: #2563eb;
-            font-size: 14px;
+            color: #3498db;
         }
         .error-box {
             display: none;
-            margin-bottom: 10px;
-            padding: 10px;
-            background: #fef2f2;
-            border-left: 4px solid #ef4444;
-            color: #991b1b;
+            margin-bottom: 15px;
+            padding: 12px;
+            background: #fdecec;
+            border-left: 5px solid #e74c3c;
+            color: #922b21;
             border-radius: 6px;
-            font-size: 13px;
+            white-space: pre-wrap;
         }
 
-        /* 모달 공통 스타일 */
+        /* 4개 국어 결과 카드 */
+        .result-container-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            margin-bottom: 8px;
+        }
+        .scrap-all-btn {
+            background: #f1c40f;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            color: #2c3e50;
+            font-size: 13px;
+        }
+        .scrap-all-btn:hover { background: #f39c12; }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+        }
+        .lang-card {
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            position: relative;
+        }
+        .lang-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .lang-title { font-weight: bold; font-size: 16px; color: #2c3e50; }
+        .icon-btn {
+            background: none;
+            color: #2c3e50;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            padding: 4px 6px;
+            border-radius: 50%;
+            transition: transform 0.1s, background-color 0.2s;
+        }
+        .icon-btn:hover {
+            background-color: rgba(0, 0, 0, 0.08);
+            transform: scale(1.15);
+        }
+        .sov-group { background-color: #e8f4f8; border-color: #bce0fd; }
+        .svo-group { background-color: #eafaf1; border-color: #c3e6cb; }
+        .lang-text { font-size: 16px; font-weight: 600; color: #111; margin-bottom: 6px; line-height: 1.4; }
+        .pronunciation { color: #555; font-size: 13px; line-height: 1.4; }
+        .structure { margin-top: 6px; font-size: 12px; color: #666; }
+        
+        .metadata-box {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #fff8e1;
+            border-left: 5px solid #ffc107;
+            border-radius: 6px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+        }
+
+        /* 모달 팝업 공통 */
         .modal-overlay {
             display: none;
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
             background: rgba(0,0,0,0.5);
-            z-index: 1000;
+            z-index: 200;
             justify-content: center;
             align-items: center;
         }
         .modal-card {
             background: white;
             width: 90%;
-            max-width: 750px;
+            max-width: 650px;
             max-height: 85vh;
             border-radius: 12px;
             padding: 20px;
@@ -292,97 +336,196 @@
             padding-bottom: 10px;
             margin-bottom: 15px;
         }
-        .modal-actions {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
         .modal-body {
             flex: 1;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
             gap: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
         }
-        .note-item {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 14px;
-            position: relative;
-        }
-        .note-delete-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-            cursor: pointer;
-        }
-        .note-delete-btn:hover { background: #dc2626; }
-        .word-download-btn {
-            background-color: #2563eb;
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .word-download-btn:hover { background-color: #1d4ed8; }
 
         .guide-section {
-            background: #f8fafc;
-            border-left: 4px solid #3b82f6;
+            background: #f8f9fa;
+            border-left: 4px solid #3498db;
             padding: 12px 15px;
-            border-radius: 6px;
+            border-radius: 4px;
         }
-        .guide-section h4 { margin: 0 0 6px 0; color: #1e293b; font-size: 15px; }
-        .guide-section ul { margin: 0; padding-left: 20px; color: #475569; }
-        .guide-section li { margin-bottom: 4px; font-size: 14px; }
+        .guide-section h4 { margin: 0 0 6px 0; color: #2c3e50; font-size: 15px; }
+        .guide-section ul { margin: 0; padding-left: 20px; }
+        .guide-section li { margin-bottom: 4px; }
+
+        .vocab-item {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 12px;
+            position: relative;
+        }
+        .vocab-delete-btn {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #e74c3c;
+        }
+
+        /* 스마트폰 / 모바일 반응형 스타일 최적화 */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                top: 0;
+                bottom: 0;
+            }
+            .sidebar.open { left: 0; }
+            .toggle-sidebar-btn { display: block; }
+            .main-content { padding: 8px; }
+            .container { padding: 12px; }
+            
+            .chat-history {
+                min-height: 280px;
+                max-height: 50vh;
+                padding: 10px;
+            }
+            .chat-bubble {
+                max-width: 90%;
+                font-size: 14px;
+            }
+
+            .header h2 { font-size: 16px; }
+            .action-btn { padding: 5px 8px; font-size: 12px; }
+            
+            .input-group { gap: 6px; }
+            input[type="text"] {
+                padding: 10px 12px;
+                font-size: 14px;
+            }
+            .mic-btn, .send-btn {
+                padding: 10px 14px;
+                font-size: 14px;
+            }
+        }
     </style>
 </head>
 <body>
-<div class="container">
-    <div class="header">
-        <h2>💬 4개 국어 AI 다자간 회화 학습기</h2>
-        <div class="header-controls">
-            <select id="userLangSelect" class="lang-select">
-                <option value="korean" selected>🇰🇷 한국어로 대화</option>
-                <option value="english">🇺🇸 영어로 대화</option>
-                <option value="japanese">🇯🇵 일본어로 대화</option>
-                <option value="chinese">🇨🇳 중국어로 대화</option>
-            </select>
-            <button class="action-btn help-btn" onclick="openHelpModal()">❓ 사용 설명서</button>
-            <button class="action-btn notebook-btn" onclick="openNotebookModal()">📒 학습 노트 보기</button>
-            <button class="action-btn reset-btn" onclick="resetChat()">새 대화</button>
-        </div>
-    </div>
 
-    <!-- 대화 영역 -->
-    <div class="chat-history" id="chatHistory">
-        <div class="ai-wrapper">
-            <div class="ai-profile">🤖 AI 4개 국어 대화 팀</div>
-            <div class="ai-card-container">
-                <div class="ai-lang-text">환영합니다! 마이크(🎤) 버튼을 눌러 음성으로 대화를 시도해 보세요. (크롬 브라우저 권장)</div>
+<!-- 좌측 사이드바 (대화방 목록) -->
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h3>💬 대화방 목록</h3>
+        <button class="new-chat-btn" onclick="createNewRoom()">+ 새 대화방</button>
+    </div>
+    <div class="room-list" id="roomList"></div>
+</div>
+
+<!-- 메인 학습기 영역 -->
+<div class="main-content">
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <button class="toggle-sidebar-btn" onclick="toggleSidebar()">☰</button>
+                <h2 id="currentRoomTitle">💬 4개 국어 대화형 AI 학습기</h2>
+            </div>
+            <div class="header-actions">
+                <button class="action-btn help-btn" onclick="openHelpModal()">❓ 사용 설명서</button>
+                <button class="action-btn" onclick="openVocabModal()">⭐ 단어장</button>
+                <button class="action-btn" onclick="exportChat('txt')">📄 TXT</button>
+                <button class="action-btn" onclick="exportChat('csv')">📊 CSV</button>
             </div>
         </div>
+
+        <!-- 대화 내역 영역 -->
+        <div class="chat-history" id="chatHistory">
+            <div class="chat-bubble model">
+                안녕하세요! 학습할 문장을 입력하거나 마이크 버튼을 눌러 음성으로 질문해 보세요. (우상단 ❓ 사용 설명서를 참고하세요!)
+            </div>
+        </div>
+
+        <!-- 입력 및 STT 마이크 영역 -->
+        <div class="input-group">
+            <input type="text" id="userInput"
+                   placeholder="문장 입력 또는 질문하기 (마이크로 음성 입력 가능)"
+                   onkeydown="if(event.key === 'Enter') sendQuery()">
+            <button class="mic-btn" id="micBtn" onclick="toggleSTT()" title="음성 입력 시작/중지">🎤</button>
+            <button class="send-btn" id="sendBtn" onclick="sendQuery()">보내기</button>
+        </div>
+
+        <div id="loading" class="loading-box">⏳ AI가 답변과 4개 국어를 분석 중입니다...</div>
+        <div id="errorBox" class="error-box"></div>
+
+        <!-- 4개 국어 결과 카드 상단 영역 -->
+        <div id="resultWrapper" style="display: none;">
+            <div class="result-container-header">
+                <span style="font-weight: bold; color: #2c3e50;">🌐 4개 국어 대조 카드</span>
+                <button class="scrap-all-btn" onclick="scrapCurrentResult()">⭐ 전체 단어장에 저장</button>
+            </div>
+
+            <!-- 4개 국어 카드 (한국어 -> 일본어 -> 영어 -> 중국어) -->
+            <div class="result-grid" id="resultGrid">
+                <!-- 1. 한국어 (SOV) -->
+                <div class="lang-card sov-group">
+                    <div class="lang-header">
+                        <span class="lang-title">🇰🇷 한국어 (SOV)</span>
+                        <button class="icon-btn" onclick="speakText('text-kr', 'ko-KR')" title="발음 듣기">🔊</button>
+                    </div>
+                    <div class="lang-text" id="text-kr"></div>
+                    <div class="pronunciation" id="pron-kr"></div>
+                    <div class="structure" id="structure-kr"></div>
+                </div>
+
+                <!-- 2. 일본어 (SOV) -->
+                <div class="lang-card sov-group">
+                    <div class="lang-header">
+                        <span class="lang-title">🇯🇵 일본어 (SOV)</span>
+                        <button class="icon-btn" onclick="speakText('text-jp', 'ja-JP')" title="발음 듣기">🔊</button>
+                    </div>
+                    <div class="lang-text" id="text-jp"></div>
+                    <div class="pronunciation" id="pron-jp"></div>
+                    <div class="structure" id="structure-jp"></div>
+                </div>
+
+                <!-- 3. 영어 (SVO) -->
+                <div class="lang-card svo-group">
+                    <div class="lang-header">
+                        <span class="lang-title">🇺🇸 영어 (SVO)</span>
+                        <button class="icon-btn" onclick="speakText('text-en', 'en-US')" title="발음 듣기">🔊</button>
+                    </div>
+                    <div class="lang-text" id="text-en"></div>
+                    <div class="pronunciation" id="pron-en"></div>
+                    <div class="structure" id="structure-en"></div>
+                </div>
+
+                <!-- 4. 중국어 (SVO) -->
+                <div class="lang-card svo-group">
+                    <div class="lang-header">
+                        <span class="lang-title">🇨🇳 중국어 (SVO)</span>
+                        <button class="icon-btn" onclick="speakText('text-cn', 'zh-CN')" title="발음 듣기">🔊</button>
+                    </div>
+                    <div class="lang-text" id="text-cn"></div>
+                    <div class="pronunciation" id="pron-cn"></div>
+                    <div class="structure" id="structure-cn"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="metadata-box" id="metadataBox" style="display: none;"></div>
     </div>
+</div>
 
-    <div id="loading" class="loading-box">⏳ AI가 답변을 작성하고 4개 국어로 대조 분석 중입니다...</div>
-    <div id="errorBox" class="error-box"></div>
-
-    <div class="input-group">
-        <input type="text" id="userInput"
-               placeholder="선택한 언어로 자유롭게 말하거나 마이크를 누르세요..."
-               onkeydown="if(event.key === 'Enter') sendQuery()">
-        <button class="mic-btn" id="micBtn" onclick="toggleSpeechRecognition()" title="음성 입력 시작/중지">🎤</button>
-        <button class="send-btn" id="sendBtn" onclick="sendQuery()">보내기</button>
+<!-- 단어장 모달 팝업 -->
+<div class="modal-overlay" id="vocabModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 style="margin: 0; color: #2c3e50;">⭐ 나의 스크랩 단어장</h3>
+            <button class="action-btn" onclick="closeVocabModal()">닫기 ✖</button>
+        </div>
+        <div class="modal-body" id="vocabList"></div>
     </div>
 </div>
 
@@ -390,78 +533,120 @@
 <div class="modal-overlay" id="helpModal">
     <div class="modal-card">
         <div class="modal-header">
-            <h3 style="margin: 0; color: #1e293b;">📖 4개 국어 학습기 사용 설명서</h3>
-            <button class="action-btn" onclick="closeHelpModal()" style="padding: 6px 10px; font-size: 12px;">닫기 ✖</button>
+            <h3 style="margin: 0; color: #2c3e50;">📖 4개 국어 학습기 사용 설명서</h3>
+            <button class="action-btn" onclick="closeHelpModal()">닫기 ✖</button>
         </div>
         <div class="modal-body">
             <div class="guide-section">
-                <h4>1. 🎤 음성 입력 (STT) 및 텍스트 대화</h4>
+                <h4>1. 기본 문장 학습 및 질문</h4>
                 <ul>
-                    <li>상단 드롭다운에서 대화할 언어를 선택합니다.</li>
-                    <li>입력창 옆 <strong>마이크(🎤) 버튼</strong>을 누르고 말하면 선택한 언어에 맞춰 음성이 자동으로 인식됩니다.</li>
+                    <li>하단 입력창에 알고 싶은 <strong>한국어, 일본어, 영어, 중국어 문장이나 질문</strong>을 입력 후 엔터를 누르면 바로 번역되어 4개 국어로 대조 분석됩니다.</li>
+                    <li>AI가 맥락을 이해하고 <strong>한·일·영·중 4개 국어로 번역 및 어순 구조</strong>를 대조해 줍니다.</li>
                 </ul>
             </div>
-            <div class="guide-section">
-                <h4>2. 내 표현 4개 국어 대조 분석</h4>
-                <ul>
-                    <li>내가 보낸 메시지 하단의 <strong>'🌐 분석 보기'</strong> 버튼을 누르면 내 문장이 4개 국어(발음 포함)로 비교됩니다.</li>
-                </ul>
-            </div>
-            <div class="guide-section">
-                <h4>3. 🔊 원어민 발음 듣기 (TTS)</h4>
-                <ul>
-                    <li>AI 대답 카드 상단의 <strong>🔊 스피커 버튼</strong>을 클릭하면 원어민 발음을 들을 수 있습니다.</li>
-                </ul>
-            </div>
-            <div class="guide-section">
-                <h4>4. 📒 학습 노트 저장 및 워드 다운로드</h4>
-                <ul>
-                    <li>마음에 드는 대화 턴의 <strong>'📒 노트에 저장'</strong>을 눌러 보관하고 워드(.doc)로 백업할 수 있습니다.</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- 학습 노트 모달 팝업 -->
-<div class="modal-overlay" id="notebookModal">
-    <div class="modal-card">
-        <div class="modal-header">
-            <h3 style="margin: 0; color: #1e293b;">📒 나의 저장된 학습 노트</h3>
-            <div class="modal-actions">
-                <button class="word-download-btn" onclick="downloadWordDocument()">📄 워드(.doc) 다운로드</button>
-                <button class="action-btn" onclick="closeNotebookModal()" style="padding: 6px 10px; font-size: 12px;">닫기 ✖</button>
+            <div class="guide-section">
+                <h4>2. 🔊 음성 발음 듣기 및 🎤 음성 입력 (STT)</h4>
+                <ul>
+                    <li>각 언어 카드의 <strong>🔊 스피커 버튼</strong>을 누르면 원어민 발음을 들을 수 있습니다.</li>
+                    <li>입력창 오른쪽의 <strong>🎤 마이크 버튼</strong>을 눌러 직접 말로 질문할 수 있습니다. (PC/스마트폰 크롬 권장)</li>
+                </ul>
             </div>
-        </div>
-        <div class="modal-body" id="notebookList">
-            <div style="text-align: center; color: #64748b; padding: 20px;">저장된 노트가 없습니다.</div>
+
+            <div class="guide-section">
+                <h4>3. ⭐ 단어장 및 대화 내역 내보내기</h4>
+                <ul>
+                    <li>마음에 드는 번역 결과가 나오면 <strong>'⭐ 전체 단어장에 저장'</strong> 버튼을 눌러 스크랩해 두세요.</li>
+                    <li>상단 <strong>📄 TXT / 📊 CSV</strong> 버튼을 눌러 전체 대화 내역을 문서/엑셀 파일로 다운로드할 수 있습니다.</li>
+                </ul>
+            </div>
+
+            <div class="guide-section">
+                <h4>4. 💬 대화방 관리</h4>
+                <ul>
+                    <li>좌측 사이드바에서 <strong>'+ 새 대화방'</strong>을 누르면 주제별로 대화를 나누어 관리할 수 있습니다. (✏️ 이름 변경, 🗑️ 삭제)</li>
+                </ul>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-let conversationHistory = [];
-let currentTurnData = null; 
-let cachedNotes = [];
+// LocalStorage 관리 키
+const STORAGE_KEY = 'multilingual_app_rooms_v1';
+const VOCAB_KEY = 'multilingual_app_vocab_v1';
+
+let rooms = [];
+let activeRoomId = null;
+let savedVocab = [];
 let recognition = null;
 let isRecording = false;
 
-function initSpeechRecognition() {
+// 모바일 사이드바 토글
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+}
+
+// 초기 로드
+window.addEventListener('DOMContentLoaded', () => {
+    loadRoomsFromStorage();
+    loadVocabFromStorage();
+    initSTT();
+
+    if (rooms.length === 0) {
+        createNewRoom();
+    } else {
+        switchRoom(rooms[0].id);
+    }
+});
+
+function loadRoomsFromStorage() {
+    try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        rooms = saved ? JSON.parse(saved) : [];
+    } catch (e) { rooms = []; }
+}
+
+function saveRoomsToStorage() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(rooms)); } catch (e) {}
+}
+
+function loadVocabFromStorage() {
+    try {
+        const saved = localStorage.getItem(VOCAB_KEY);
+        savedVocab = saved ? JSON.parse(saved) : [];
+    } catch (e) { savedVocab = []; }
+}
+
+function saveVocabToStorage() {
+    try { localStorage.setItem(VOCAB_KEY, JSON.stringify(savedVocab)); } catch (e) {}
+}
+
+// 사용 설명서 모달 열기/닫기
+function openHelpModal() {
+    document.getElementById('helpModal').style.display = 'flex';
+}
+function closeHelpModal() {
+    document.getElementById('helpModal').style.display = 'none';
+}
+
+// STT (Speech-To-Text) 음성 인식 로직
+function initSTT() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
-        console.warn("이 브라우저는 음성 인식을 지원하지 않습니다.");
+        document.getElementById('micBtn').title = '이 브라우저는 음성 인식을 지원하지 않습니다.';
         return;
     }
 
     recognition = new SpeechRecognition();
+    recognition.lang = 'ko-KR';
     recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
 
     recognition.onstart = () => {
         isRecording = true;
         const micBtn = document.getElementById('micBtn');
         micBtn.classList.add('recording');
-        micBtn.title = "듣고 있는 중... 중지하려면 누르세요";
+        micBtn.textContent = '🛑';
     };
 
     recognition.onresult = (event) => {
@@ -470,349 +655,344 @@ function initSpeechRecognition() {
     };
 
     recognition.onerror = (event) => {
-        console.error("음성 인식 오류:", event.error);
-        stopSpeechRecognition();
+        console.error('STT 에러:', event.error);
+        stopSTT();
     };
 
     recognition.onend = () => {
-        stopSpeechRecognition();
+        stopSTT();
     };
 }
 
-function toggleSpeechRecognition() {
+function toggleSTT() {
     if (!recognition) {
         alert('이 브라우저는 음성 입력을 지원하지 않습니다. Chrome 브라우저를 이용해 주세요.');
         return;
     }
 
-    const langSelect = document.getElementById('userLangSelect').value;
-    const langMap = {
-        korean: 'ko-KR',
-        english: 'en-US',
-        japanese: 'ja-JP',
-        chinese: 'zh-CN'
-    };
-    recognition.lang = langMap[langSelect] || 'ko-KR';
-
     if (isRecording) {
         recognition.stop();
     } else {
-        try {
-            recognition.start();
-        } catch (e) {
-            recognition.stop();
-        }
+        recognition.start();
     }
 }
 
-function stopSpeechRecognition() {
+function stopSTT() {
     isRecording = false;
     const micBtn = document.getElementById('micBtn');
     micBtn.classList.remove('recording');
-    micBtn.title = "음성 입력 시작/중지";
+    micBtn.textContent = '🎤';
 }
 
-window.addEventListener('DOMContentLoaded', () => {
-    initSpeechRecognition();
-});
+// 단어장 / 문장 스크랩 로직
+function scrapCurrentResult() {
+    const currentRoom = rooms.find(r => r.id === activeRoomId);
+    if (!currentRoom || !currentRoom.lastResult) {
+        alert('저장할 4개 국어 결과가 없습니다.');
+        return;
+    }
 
-function speakDirect(text, langCode) {
-    if (!text || !('speechSynthesis' in window)) return;
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = langCode;
-    utterance.rate = 0.9;
-    setTimeout(() => { window.speechSynthesis.speak(utterance); }, 50);
+    const res = currentRoom.lastResult.languages;
+    const item = {
+        id: 'vocab_' + Date.now(),
+        date: new Date().toLocaleDateString(),
+        kr: res?.korean?.text || '',
+        jp: res?.japanese?.text || '',
+        en: res?.english?.text || '',
+        cn: res?.chinese?.text || ''
+    };
+
+    savedVocab.unshift(item);
+    saveVocabToStorage();
+    alert('⭐ 단어장에 성공적으로 저장되었습니다!');
 }
 
-function escapeHtml(str) {
-    if (!str) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+function openVocabModal() {
+    renderVocabList();
+    document.getElementById('vocabModal').style.display = 'flex';
 }
 
-function showError(msg) {
+function closeVocabModal() {
+    document.getElementById('vocabModal').style.display = 'none';
+}
+
+function deleteVocabItem(id) {
+    savedVocab = savedVocab.filter(v => v.id !== id);
+    saveVocabToStorage();
+    renderVocabList();
+}
+
+function renderVocabList() {
+    const listEl = document.getElementById('vocabList');
+    listEl.innerHTML = '';
+
+    if (savedVocab.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center; color:#777; padding:20px;">저장된 단어장 표현이 없습니다.</div>';
+        return;
+    }
+
+    savedVocab.forEach(v => {
+        const div = document.createElement('div');
+        div.className = 'vocab-item';
+        div.innerHTML = `
+            <button class="vocab-delete-btn" onclick="deleteVocabItem('${v.id}')">✖ 삭제</button>
+            <div style="font-size:12px; color:#888; margin-bottom:4px;">📅 ${v.date}</div>
+            <div><strong>🇰🇷</strong> ${escapeHtml(v.kr)}</div>
+            <div><strong>🇯🇵</strong> ${escapeHtml(v.jp)}</div>
+            <div><strong>🇺🇸</strong> ${escapeHtml(v.en)}</div>
+            <div><strong>🇨🇳</strong> ${escapeHtml(v.cn)}</div>
+        `;
+        listEl.appendChild(div);
+    });
+}
+
+// 대화 내역 내보내기 (TXT / CSV)
+function exportChat(format) {
+    const currentRoom = rooms.find(r => r.id === activeRoomId);
+    if (!currentRoom || !currentRoom.uiBubbles || currentRoom.uiBubbles.length === 0) {
+        alert('내보낼 대화 기록이 없습니다.');
+        return;
+    }
+
+    let fileContent = '';
+    let fileName = `${currentRoom.title}_학습기록.${format}`;
+    let mimeType = 'text/plain';
+
+    if (format === 'txt') {
+        fileContent += `=== 4개 국어 대화 학습 기록: ${currentRoom.title} ===\n\n`;
+        currentRoom.uiBubbles.forEach(b => {
+            const roleStr = b.role === 'user' ? '[나]' : '[AI 학습기]';
+            fileContent += `${roleStr}\n${b.text}\n\n`;
+        });
+    } else if (format === 'csv') {
+        mimeType = 'text/csv';
+        fileContent = '\uFEFF';
+        fileContent += '역할,내용\n';
+        currentRoom.uiBubbles.forEach(b => {
+            const roleStr = b.role === 'user' ? '사용자' : 'AI';
+            const safeText = `"${b.text.replace(/"/g, '""')}"`;
+            fileContent += `${roleStr},${safeText}\n`;
+        });
+    }
+
+    const blob = new Blob([fileContent], { type: `${mimeType};charset=utf-8;` });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = fileName;
+    link.click();
+}
+
+// 대화방 및 UI 관리 로직
+function createNewRoom() {
+    const newRoom = {
+        id: 'room_' + Date.now(),
+        title: '새로운 대화방',
+        history: [],
+        uiBubbles: [],
+        lastResult: null
+    };
+    rooms.unshift(newRoom);
+    saveRoomsToStorage();
+    renderRoomList();
+    switchRoom(newRoom.id);
+    document.getElementById('sidebar').classList.remove('open');
+}
+
+function switchRoom(roomId) {
+    activeRoomId = roomId;
+    const room = rooms.find(r => r.id === roomId);
+    if (!room) return;
+
+    document.getElementById('currentRoomTitle').textContent = room.title;
+    renderRoomList();
+    renderChatHistory(room);
+    renderLastResult(room.lastResult);
+    document.getElementById('errorBox').style.display = 'none';
+}
+
+function deleteRoom(roomId, event) {
+    event.stopPropagation();
+    if (!confirm('이 대화방을 삭제하시겠습니까?')) return;
+
+    rooms = rooms.filter(r => r.id !== roomId);
+    saveRoomsToStorage();
+
+    if (rooms.length === 0) {
+        createNewRoom();
+    } else {
+        switchRoom(rooms[0].id);
+    }
+}
+
+function renameRoom(roomId, event) {
+    event.stopPropagation();
+    const room = rooms.find(r => r.id === roomId);
+    if (!room) return;
+
+    const newTitle = prompt('대화방 이름을 입력하세요:', room.title);
+    if (newTitle && newTitle.trim()) {
+        room.title = newTitle.trim();
+        saveRoomsToStorage();
+        renderRoomList();
+        if (activeRoomId === roomId) {
+            document.getElementById('currentRoomTitle').textContent = room.title;
+        }
+    }
+}
+
+function renderRoomList() {
+    const listEl = document.getElementById('roomList');
+    listEl.innerHTML = '';
+
+    rooms.forEach(room => {
+        const item = document.createElement('div');
+        item.className = `room-item ${room.id === activeRoomId ? 'active' : ''}`;
+        item.onclick = () => switchRoom(room.id);
+
+        item.innerHTML = `
+            <span class="room-title">${escapeHtml(room.title)}</span>
+            <div class="room-actions">
+                <span onclick="renameRoom('${room.id}', event)" title="이름 변경">✏️</span>
+                <span onclick="deleteRoom('${room.id}', event)" title="삭제">🗑️</span>
+            </div>
+        `;
+        listEl.appendChild(item);
+    });
+}
+
+function renderChatHistory(room) {
+    const historyContainer = document.getElementById('chatHistory');
+    historyContainer.innerHTML = '';
+
+    if (!room.uiBubbles || room.uiBubbles.length === 0) {
+        historyContainer.innerHTML = `
+            <div class="chat-bubble model">
+                안녕하세요! 학습할 문장을 입력하거나 마이크 버튼을 눌러 음성으로 질문해 보세요. (우상단 ❓ 사용 설명서를 참고하세요!)
+            </div>`;
+        return;
+    }
+
+    room.uiBubbles.forEach(b => {
+        const bubble = document.createElement('div');
+        bubble.className = `chat-bubble ${b.role}`;
+        bubble.textContent = b.text;
+        historyContainer.appendChild(bubble);
+    });
+    historyContainer.scrollTop = historyContainer.scrollHeight;
+}
+
+function renderLastResult(data) {
+    const resultWrapper = document.getElementById('resultWrapper');
+    const metadataBox = document.getElementById('metadataBox');
+
+    if (!data) {
+        resultWrapper.style.display = 'none';
+        metadataBox.style.display = 'none';
+        return;
+    }
+
+    const languages = data.languages || {};
+    const items = [
+        ['korean', 'kr'],
+        ['japanese', 'jp'],
+        ['english', 'en'],
+        ['chinese', 'cn']
+    ];
+
+    items.forEach(([key, short]) => {
+        const item = languages[key] || {};
+        setText(`text-${short}`, item.text);
+        setText(`pron-${short}`, item.pronunciation ? `발음: ${item.pronunciation}` : '');
+        setText(`structure-${short}`, item.structure ? `어순: ${item.structure}` : '');
+    });
+
+    setText('metadataBox', data.metadata?.contrast_note || '');
+    resultWrapper.style.display = 'block';
+    metadataBox.style.display = data.metadata?.contrast_note ? 'block' : 'none';
+}
+
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value || '';
+}
+
+function escapeHtml(text) {
+    return text.replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
+    });
+}
+
+function showError(message) {
     const box = document.getElementById('errorBox');
-    box.textContent = msg;
+    box.textContent = message;
     box.style.display = 'block';
 }
 
-function toggleUserTranslation(id) {
-    const el = document.getElementById(id);
-    if (el) el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
-}
+// 음성 합성 (TTS)
+function speakText(elementId, langCode) {
+    const el = document.getElementById(elementId);
+    if (!el || !el.innerText.trim() || !('speechSynthesis' in window)) return;
 
-function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
-function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
+    window.speechSynthesis.cancel();
 
-function appendUserMessage(userText, userAnalysis, selectedLang) {
-    const historyContainer = document.getElementById('chatHistory');
-    const wrapper = document.createElement('div');
-    wrapper.className = 'user-wrapper';
+    const textToSpeak = el.innerText.trim();
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    utterance.lang = langCode;
+    utterance.rate = 0.85;
 
-    const toggleId = 'user-trans-' + Date.now();
-    const langBadges = { korean: '🇰🇷 KO', english: '🇺🇸 EN', japanese: '🇯🇵 JP', chinese: '🇨🇳 CN' };
-
-    const htmlContent = `
-        <div style="font-size:11px; color:#64748b; margin-bottom:2px;">[${langBadges[selectedLang] || '내 언어'}]</div>
-        <div class="chat-bubble-user">${escapeHtml(userText)}</div>
-        <div class="user-controls">
-            <button class="save-note-btn" onclick="saveCurrentToNotebook()">📒 노트에 저장</button>
-            <button class="user-toggle-btn" onclick="toggleUserTranslation('${toggleId}')">
-                🌐 분석 보기 ▾
-            </button>
-        </div>
-        <div id="${toggleId}" class="user-translation-card">
-            <div class="trans-header">✨ 내 문장 4개 국어 대조</div>
-            <div class="trans-item">🇰🇷 <strong>KO:</strong> ${escapeHtml(userAnalysis?.korean || '')}</div>
-            <div class="trans-item">🇺🇸 <strong>EN:</strong> ${escapeHtml(userAnalysis?.english?.text || '')}</div>
-            <div class="trans-item">🇨🇳 <strong>CN:</strong> ${escapeHtml(userAnalysis?.chinese?.text || '')} <span style="color:#64748b;">(${escapeHtml(userAnalysis?.chinese?.pronunciation || '')})</span></div>
-            <div class="trans-item">🇯🇵 <strong>JP:</strong> ${escapeHtml(userAnalysis?.japanese?.text || '')} <span style="color:#64748b;">(${escapeHtml(userAnalysis?.japanese?.pronunciation || '')})</span></div>
-        </div>
-    `;
-
-    wrapper.innerHTML = htmlContent;
-    historyContainer.appendChild(wrapper);
-    historyContainer.scrollTop = historyContainer.scrollHeight;
-}
-
-function appendAIMessage(data) {
-    const historyContainer = document.getElementById('chatHistory');
-    const wrapper = document.createElement('div');
-    wrapper.className = 'ai-wrapper';
-
-    const languages = data.languages || {};
-    const metadata = data.metadata || {};
-
-    const htmlContent = `
-        <div class="ai-profile">🤖 AI 4개 국어 대화 팀</div>
-        <div class="ai-card-container">
-            <div class="ai-lang-group sov-bg">
-                <div class="ai-lang-title">
-                    <span>🇰🇷 한국어 AI</span>
-                    <button class="speaker-btn" onclick="speakDirect('${escapeHtml(languages.korean?.text)}', 'ko-KR')">🔊</button>
-                </div>
-                <div class="ai-lang-text">${escapeHtml(languages.korean?.text)}</div>
-            </div>
-
-            <div class="ai-lang-group svo-bg">
-                <div class="ai-lang-title">
-                    <span>🇺🇸 영어 AI (SVO)</span>
-                    <button class="speaker-btn" onclick="speakDirect('${escapeHtml(languages.english?.text)}', 'en-US')">🔊</button>
-                </div>
-                <div class="ai-lang-text">${escapeHtml(languages.english?.text)}</div>
-            </div>
-
-            <div class="ai-lang-group svo-bg">
-                <div class="ai-lang-title">
-                    <span>🇨🇳 중국어 AI (SVO)</span>
-                    <button class="speaker-btn" onclick="speakDirect('${escapeHtml(languages.chinese?.text)}', 'zh-CN')">🔊</button>
-                </div>
-                <div class="ai-lang-text">${escapeHtml(languages.chinese?.text)}</div>
-                ${languages.chinese?.pronunciation ? `<div class="ai-sub-info">병음: ${escapeHtml(languages.chinese.pronunciation)}</div>` : ''}
-            </div>
-
-            <div class="ai-lang-group sov-bg">
-                <div class="ai-lang-title">
-                    <span>🇯🇵 일본어 AI (SOV)</span>
-                    <button class="speaker-btn" onclick="speakDirect('${escapeHtml(languages.japanese?.text)}', 'ja-JP')">🔊</button>
-                </div>
-                <div class="ai-lang-text">${escapeHtml(languages.japanese?.text)}</div>
-                ${languages.japanese?.pronunciation ? `<div class="ai-sub-info">발음: ${escapeHtml(languages.japanese.pronunciation)}</div>` : ''}
-            </div>
-
-            ${metadata.contrast_note ? `<div class="meta-note">💡 <strong>어순 및 문법 포인트:</strong>\n${escapeHtml(metadata.contrast_note)}</div>` : ''}
-        </div>
-    `;
-
-    wrapper.innerHTML = htmlContent;
-    historyContainer.appendChild(wrapper);
-    historyContainer.scrollTop = historyContainer.scrollHeight;
-}
-
-async function saveCurrentToNotebook() {
-    if (!currentTurnData) {
-        alert('저장할 대화 내용이 없습니다.');
-        return;
-    }
-
-    const noteItem = {
-        id: 'note_' + Date.now(),
-        date: new Date().toLocaleString(),
-        selected_lang: currentTurnData.selected_lang,
-        user_text: currentTurnData.user_text,
-        user_analysis: currentTurnData.user_analysis,
-        ai_response: currentTurnData.languages,
-        contrast_note: currentTurnData.metadata?.contrast_note || ''
+    const langMap = {
+        'ko-KR': ['ko-KR', 'ko'],
+        'ja-JP': ['ja-JP', 'ja'],
+        'en-US': ['en-US', 'en'],
+        'zh-CN': ['zh-CN', 'zh-Hans', 'zh']
     };
 
-    try {
-        const res = await fetch('/api/notebook', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(noteItem)
-        });
-        if (res.ok) {
-            alert('📒 학습 노트에 성공적으로 저장되었습니다!');
-        } else {
-            alert('노트 저장 중 오류가 발생했습니다.');
+    const targetLangs = langMap[langCode] || [langCode];
+    const voices = window.speechSynthesis.getVoices();
+
+    if (voices.length > 0) {
+        const matchedVoice = voices.find(v => 
+            targetLangs.some(l => v.lang.replace('_', '-').toLowerCase().startsWith(l.toLowerCase()))
+        );
+        if (matchedVoice) {
+            utterance.voice = matchedVoice;
         }
-    } catch (e) {
-        alert('네트워크 오류가 발생했습니다.');
-    }
-}
-
-async function openNotebookModal() {
-    const modal = document.getElementById('notebookModal');
-    const listEl = document.getElementById('notebookList');
-    listEl.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">불러오는 중...</div>';
-    modal.style.display = 'flex';
-
-    try {
-        const res = await fetch('/api/notebook');
-        cachedNotes = await res.json();
-        
-        listEl.innerHTML = '';
-        if (!cachedNotes || cachedNotes.length === 0) {
-            listEl.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">저장된 학습 노트가 없습니다.</div>';
-            return;
-        }
-
-        cachedNotes.forEach(note => {
-            const div = document.createElement('div');
-            div.className = 'note-item';
-            div.innerHTML = `
-                <button class="note-delete-btn" onclick="deleteNotebookItem('${note.id}')">삭제</button>
-                <div style="font-size:11px; color:#64748b; margin-bottom:4px;">📅 ${note.date} (사용 언어: ${note.selected_lang})</div>
-                <div style="font-weight:bold; color:#1e293b; margin-bottom:6px;">💬 내 표현: "${escapeHtml(note.user_text)}"</div>
-                
-                <div style="font-size:13px; background:#fff; padding:8px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:6px;">
-                    <div style="font-weight:bold; color:#2563eb; margin-bottom:2px;">✨ 내 표현 4개 국어 대조</div>
-                    <div>🇰🇷 KO: ${escapeHtml(note.user_analysis?.korean)}</div>
-                    <div>🇺🇸 EN: ${escapeHtml(note.user_analysis?.english?.text)}</div>
-                    <div>🇨🇳 CN: ${escapeHtml(note.user_analysis?.chinese?.text)} ${note.user_analysis?.chinese?.pronunciation ? `(${escapeHtml(note.user_analysis.chinese.pronunciation)})` : ''}</div>
-                    <div>🇯🇵 JP: ${escapeHtml(note.user_analysis?.japanese?.text)} ${note.user_analysis?.japanese?.pronunciation ? `(${escapeHtml(note.user_analysis.japanese.pronunciation)})` : ''}</div>
-                </div>
-
-                <div style="font-size:13px; background:#f0fdf4; padding:8px; border-radius:6px; border:1px solid #bbf7d0;">
-                    <div style="font-weight:bold; color:#166534; margin-bottom:2px;">🤖 AI 대답 4개 국어 핵심</div>
-                    <div>🇰🇷 KO: ${escapeHtml(note.ai_response?.korean?.text)}</div>
-                    <div>🇺🇸 EN: ${escapeHtml(note.ai_response?.english?.text)}</div>
-                    <div>🇨🇳 CN: ${escapeHtml(note.ai_response?.chinese?.text)} ${note.ai_response?.chinese?.pronunciation ? `(${escapeHtml(note.ai_response.chinese.pronunciation)})` : ''}</div>
-                    <div>🇯🇵 JP: ${escapeHtml(note.ai_response?.japanese?.text)} ${note.ai_response?.japanese?.pronunciation ? `(${escapeHtml(note.ai_response.japanese.pronunciation)})` : ''}</div>
-                </div>
-                ${note.contrast_note ? `<div style="font-size:12px; color:#78350f; margin-top:6px; background:#fffbe3; padding:6px; border-radius:4px;">💡 ${escapeHtml(note.contrast_note)}</div>` : ''}
-            `;
-            listEl.appendChild(div);
-        });
-    } catch (e) {
-        listEl.innerHTML = '<div style="text-align:center; color:#ef4444; padding:20px;">노트를 불러오는 중 오류가 발생했습니다.</div>';
-    }
-}
-
-function downloadWordDocument() {
-    if (!cachedNotes || cachedNotes.length === 0) {
-        alert('다운로드할 학습 노트가 없습니다.');
-        return;
     }
 
-    let htmlContent = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/1999/xhtml">
-        <head>
-            <meta charset="utf-8">
-            <title>4개 국어 학습 노트</title>
-            <style>
-                body { font-family: 'Malgun Gothic', sans-serif; line-height: 1.6; color: #333; }
-                .note-box { border: 1px solid #cbd5e1; padding: 15px; margin-bottom: 20px; border-radius: 8px; background: #f8fafc; }
-                .title { font-weight: bold; color: #1e293b; font-size: 16px; margin-bottom: 5px; }
-                .sub-box { background: #fff; border: 1px solid #e2e8f0; padding: 10px; margin-top: 8px; border-radius: 4px; }
-                .ai-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px; margin-top: 8px; border-radius: 4px; }
-            </style>
-        </head>
-        <body>
-            <h1 style="color: #2563eb; text-align: center;">📒 4개 국어 다자간 학습 노트</h1>
-            <hr style="border:1px solid #cbd5e1; margin-bottom: 20px;">
-    `;
-
-    cachedNotes.forEach((note, index) => {
-        htmlContent += `
-            <div class="note-box">
-                <div style="font-size: 12px; color: #64748b;">[${index + 1}] 저장 일시: ${note.date} (사용 언어: ${note.selected_lang})</div>
-                <div class="title" style="margin-top: 6px;">💬 내 표현: "${note.user_text}"</div>
-                
-                <div class="sub-box">
-                    <strong>✨ 내 표현 4개 국어 대조</strong><br>
-                    • 🇰🇷 KO: ${note.user_analysis?.korean || ''}<br>
-                    • 🇺🇸 EN: ${note.user_analysis?.english?.text || ''}<br>
-                    • 🇨🇳 CN: ${note.user_analysis?.chinese?.text || ''} ${note.user_analysis?.chinese?.pronunciation ? `(${note.user_analysis.chinese.pronunciation})` : ''}<br>
-                    • 🇯🇵 JP: ${note.user_analysis?.japanese?.text || ''} ${note.user_analysis?.japanese?.pronunciation ? `(${note.user_analysis.japanese.pronunciation})` : ''}
-                </div>
-
-                <div class="ai-box">
-                    <strong>🤖 AI 대답 4개 국어 핵심</strong><br>
-                    • 🇰🇷 KO: ${note.ai_response?.korean?.text || ''}<br>
-                    • 🇺🇸 EN: ${note.ai_response?.english?.text || ''}<br>
-                    • 🇨🇳 CN: ${note.ai_response?.chinese?.text || ''} ${note.ai_response?.chinese?.pronunciation ? `(${note.ai_response.chinese.pronunciation})` : ''}<br>
-                    • 🇯🇵 JP: ${note.ai_response?.japanese?.text || ''} ${note.ai_response?.japanese?.pronunciation ? `(${note.ai_response.japanese.pronunciation})` : ''}
-                </div>
-                ${note.contrast_note ? `<div style="margin-top:8px; font-size:13px; color:#78350f;">💡 <strong>포인트:</strong> ${note.contrast_note}</div>` : ''}
-            </div>
-        `;
-    });
-
-    htmlContent += `</body></html>`;
-
-    const blob = new Blob(['\ufeff' + htmlContent], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `4개국어_학습노트_${new Date().toISOString().slice(0, 10)}.doc`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setTimeout(() => {
+        window.speechSynthesis.speak(utterance);
+    }, 50);
 }
 
-async function deleteNotebookItem(noteId) {
-    if (!confirm('이 노트를 삭제하시겠습니까?')) return;
-    try {
-        const res = await fetch(`/api/notebook/${noteId}`, { method: 'DELETE' });
-        if (res.ok) { openNotebookModal(); }
-    } catch (e) {
-        alert('삭제 중 오류가 발생했습니다.');
-    }
+if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => { window.speechSynthesis.getVoices(); };
 }
 
-function closeNotebookModal() { document.getElementById('notebookModal').style.display = 'none'; }
-
-function resetChat() {
-    conversationHistory = [];
-    currentTurnData = null;
-    document.getElementById('chatHistory').innerHTML = `
-        <div class="ai-wrapper">
-            <div class="ai-profile">🤖 AI 4개 국어 대화 팀</div>
-            <div class="ai-card-container">
-                <div class="ai-lang-text">새 대화가 시작되었습니다. 언어를 선택하여 자유롭게 말을 건네보세요!</div>
-            </div>
-        </div>`;
-    document.getElementById('errorBox').style.display = 'none';
-    document.getElementById('userInput').value = '';
-}
-
+// API 메시지 전송
 async function sendQuery() {
     const inputEl = document.getElementById('userInput');
     const btnEl = document.getElementById('sendBtn');
     const loadingEl = document.getElementById('loading');
     const errorBox = document.getElementById('errorBox');
-    const langSelect = document.getElementById('userLangSelect');
-    
     const text = inputEl.value.trim();
-    const selectedLang = langSelect.value;
 
     if (!text) {
-        showError('메시지를 입력해주세요.');
+        showError('문장이나 질문을 입력해주세요.');
         inputEl.focus();
         return;
     }
+
+    const currentRoom = rooms.find(r => r.id === activeRoomId);
+    if (!currentRoom) return;
+
+    if (currentRoom.history.length === 0 && currentRoom.title === '새로운 대화방') {
+        currentRoom.title = text.length > 12 ? text.substring(0, 12) + '...' : text;
+        document.getElementById('currentRoomTitle').textContent = currentRoom.title;
+        renderRoomList();
+    }
+
+    currentRoom.uiBubbles.push({ role: 'user', text: text });
+    renderChatHistory(currentRoom);
 
     inputEl.value = '';
     btnEl.disabled = true;
@@ -825,8 +1005,7 @@ async function sendQuery() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 text: text,
-                selected_lang: selectedLang,
-                history: conversationHistory
+                history: currentRoom.history
             })
         });
 
@@ -834,27 +1013,28 @@ async function sendQuery() {
         try {
             data = await response.json();
         } catch (_) {
-            throw new Error(`서버 응답 형식이 올바르지 않습니다.`);
+            throw new Error(`서버 응답 오류 (HTTP ${response.status})`);
         }
 
         if (!response.ok) {
-            throw new Error(data.detail || `서버 오류 발생 (${response.status})`);
+            throw new Error(data.detail || `서버 오류 발생 (HTTP ${response.status})`);
         }
 
-        currentTurnData = {
-            user_text: text,
-            selected_lang: selectedLang,
-            ...data
-        };
+        currentRoom.history.push({ role: 'user', content: text });
+        currentRoom.history.push({ role: 'model', content: data.languages?.korean?.text || text });
 
-        appendUserMessage(text, data.user_analysis, selectedLang);
-        appendAIMessage(data);
+        if (data.metadata?.contrast_note) {
+            currentRoom.uiBubbles.push({ role: 'model', text: data.metadata.contrast_note });
+        }
+        currentRoom.lastResult = data;
 
-        conversationHistory.push({ role: 'user', content: text });
-        conversationHistory.push({ role: 'model', content: data.languages?.korean?.text || '' });
+        saveRoomsToStorage();
+        renderChatHistory(currentRoom);
+        renderLastResult(data);
 
     } catch (error) {
-        showError(error.message || '오류가 발생했습니다.');
+        console.error(error);
+        showError(error.message || '알 수 없는 오류가 발생했습니다.');
     } finally {
         loadingEl.style.display = 'none';
         btnEl.disabled = false;
