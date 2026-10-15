@@ -66,6 +66,7 @@
         .reset-btn { background-color: #e74c3c; }
         .reset-btn:hover { background-color: #c0392b; }
 
+        /* 대화창 스타일 */
         .chat-history {
             height: 500px;
             overflow-y: auto;
@@ -79,6 +80,7 @@
             gap: 16px;
         }
 
+        /* 유저 말풍선 */
         .user-wrapper {
             display: flex;
             flex-direction: column;
@@ -142,6 +144,7 @@
         }
         .trans-item { margin-bottom: 4px; }
 
+        /* AI 대답 영역 */
         .ai-wrapper {
             display: flex;
             flex-direction: column;
@@ -201,6 +204,7 @@
             white-space: pre-wrap;
         }
 
+        /* 입력바 및 마이크 버튼 스타일 */
         .input-group { display: flex; gap: 10px; }
         input[type="text"] {
             flex: 1;
@@ -259,6 +263,7 @@
             font-size: 13px;
         }
 
+        /* 모달 공통 스타일 */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -347,7 +352,7 @@
     <div class="header">
         <h2>💬 4개 국어 AI 다자간 회화 학습기</h2>
         <div class="header-controls">
-            <select id="userLangSelect" class="lang-select" onchange="onLanguageChange()">
+            <select id="userLangSelect" class="lang-select">
                 <option value="korean" selected>🇰🇷 한국어로 대화</option>
                 <option value="english">🇺🇸 영어로 대화</option>
                 <option value="japanese">🇯🇵 일본어로 대화</option>
@@ -364,7 +369,7 @@
         <div class="ai-wrapper">
             <div class="ai-profile">🤖 AI 4개 국어 대화 팀</div>
             <div class="ai-card-container">
-                <div class="ai-lang-text" id="welcomeText">상단에서 대화할 언어를 선택하세요. 선택한 언어로 마이크(🎤) 음성 입력 및 대화 연습이 진행됩니다!</div>
+                <div class="ai-lang-text">환영합니다! 마이크(🎤) 버튼을 눌러 음성으로 대화를 시도해 보세요. (크롬 브라우저 권장)</div>
             </div>
         </div>
     </div>
@@ -376,7 +381,7 @@
         <input type="text" id="userInput"
                placeholder="선택한 언어로 자유롭게 말하거나 마이크를 누르세요..."
                onkeydown="if(event.key === 'Enter') sendQuery()">
-        <button class="mic-btn" id="micBtn" onclick="toggleSpeechRecognition()" title="선택한 언어로 음성 입력">🎤</button>
+        <button class="mic-btn" id="micBtn" onclick="toggleSpeechRecognition()" title="음성 입력 시작/중지">🎤</button>
         <button class="send-btn" id="sendBtn" onclick="sendQuery()">보내기</button>
     </div>
 </div>
@@ -390,17 +395,28 @@
         </div>
         <div class="modal-body">
             <div class="guide-section">
-                <h4>1. 🌐 대화 언어 선택</h4>
+                <h4>1. 🎤 음성 입력 (STT) 및 텍스트 대화</h4>
                 <ul>
-                    <li>상단에서 선택한 언어에 맞춰 <strong>마이크 음성 인식(STT) 언어</strong>가 해당 국가(영어, 일본어, 중국어, 한국어)로 즉시 변경됩니다.</li>
-                    <li>AI 또한 선택된 언어를 사용자의 메인 주력 언어로 인식하여 대화 및 문법 교정 피드백을 제공합니다.</li>
+                    <li>상단 드롭다운에서 대화할 언어를 선택합니다.</li>
+                    <li>입력창 옆 <strong>마이크(🎤) 버튼</strong>을 누르고 말하면 선택한 언어에 맞춰 음성이 자동으로 인식됩니다.</li>
                 </ul>
             </div>
             <div class="guide-section">
-                <h4>2. 개별 노트 저장 및 워드 통합 다운로드</h4>
+                <h4>2. 내 표현 4개 국어 대조 분석</h4>
                 <ul>
-                    <li>마음에 드는 대화 턴마다 <strong>[📒 노트에 저장]</strong> 버튼을 눌러 개별 저장할 수 있습니다.</li>
-                    <li>노트 보기 모달창에서 <strong>[📄 워드(.doc) 다운로드]</strong>를 누르면 전체 저장된 내용이 하나의 문서로 깔끔하게 백업됩니다.</li>
+                    <li>내가 보낸 메시지 하단의 <strong>'🌐 분석 보기'</strong> 버튼을 누르면 내 문장이 4개 국어(발음 포함)로 비교됩니다.</li>
+                </ul>
+            </div>
+            <div class="guide-section">
+                <h4>3. 🔊 원어민 발음 듣기 (TTS)</h4>
+                <ul>
+                    <li>AI 대답 카드 상단의 <strong>🔊 스피커 버튼</strong>을 클릭하면 원어민 발음을 들을 수 있습니다.</li>
+                </ul>
+            </div>
+            <div class="guide-section">
+                <h4>4. 📒 학습 노트 저장 및 워드 다운로드</h4>
+                <ul>
+                    <li>마음에 드는 대화 턴의 <strong>'📒 노트에 저장'</strong>을 눌러 보관하고 워드(.doc)로 백업할 수 있습니다.</li>
                 </ul>
             </div>
         </div>
@@ -425,13 +441,17 @@
 
 <script>
 let conversationHistory = [];
+let currentTurnData = null; 
 let cachedNotes = [];
 let recognition = null;
 let isRecording = false;
 
 function initSpeechRecognition() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
+    if (!SpeechRecognition) {
+        console.warn("이 브라우저는 음성 인식을 지원하지 않습니다.");
+        return;
+    }
 
     recognition = new SpeechRecognition();
     recognition.interimResults = false;
@@ -441,6 +461,7 @@ function initSpeechRecognition() {
         isRecording = true;
         const micBtn = document.getElementById('micBtn');
         micBtn.classList.add('recording');
+        micBtn.title = "듣고 있는 중... 중지하려면 누르세요";
     };
 
     recognition.onresult = (event) => {
@@ -448,23 +469,14 @@ function initSpeechRecognition() {
         document.getElementById('userInput').value = transcript;
     };
 
-    recognition.onerror = () => { stopSpeechRecognition(); };
-    recognition.onend = () => { stopSpeechRecognition(); };
-}
-
-function onLanguageChange() {
-    if (!recognition) return;
-    const langSelect = document.getElementById('userLangSelect').value;
-    const langMap = { korean: 'ko-KR', english: 'en-US', japanese: 'ja-JP', chinese: 'zh-CN' };
-    recognition.lang = langMap[langSelect] || 'ko-KR';
-    
-    const placeholders = {
-        korean: '한국어로 자유롭게 말하거나 마이크를 누르세요...',
-        english: 'Speak in English or click mic...',
-        japanese: '日本語で話すか、マイクを押してください...',
-        chinese: '请用中文说话或点击麦克风...'
+    recognition.onerror = (event) => {
+        console.error("음성 인식 오류:", event.error);
+        stopSpeechRecognition();
     };
-    document.getElementById('userInput').placeholder = placeholders[langSelect] || '';
+
+    recognition.onend = () => {
+        stopSpeechRecognition();
+    };
 }
 
 function toggleSpeechRecognition() {
@@ -473,12 +485,23 @@ function toggleSpeechRecognition() {
         return;
     }
 
-    onLanguageChange();
+    const langSelect = document.getElementById('userLangSelect').value;
+    const langMap = {
+        korean: 'ko-KR',
+        english: 'en-US',
+        japanese: 'ja-JP',
+        chinese: 'zh-CN'
+    };
+    recognition.lang = langMap[langSelect] || 'ko-KR';
 
     if (isRecording) {
         recognition.stop();
     } else {
-        try { recognition.start(); } catch (e) { recognition.stop(); }
+        try {
+            recognition.start();
+        } catch (e) {
+            recognition.stop();
+        }
     }
 }
 
@@ -486,11 +509,11 @@ function stopSpeechRecognition() {
     isRecording = false;
     const micBtn = document.getElementById('micBtn');
     micBtn.classList.remove('recording');
+    micBtn.title = "음성 입력 시작/중지";
 }
 
-window.addEventListener('DOMContentLoaded', () => { 
-    initSpeechRecognition(); 
-    onLanguageChange();
+window.addEventListener('DOMContentLoaded', () => {
+    initSpeechRecognition();
 });
 
 function speakDirect(text, langCode) {
@@ -521,20 +544,19 @@ function toggleUserTranslation(id) {
 function openHelpModal() { document.getElementById('helpModal').style.display = 'flex'; }
 function closeHelpModal() { document.getElementById('helpModal').style.display = 'none'; }
 
-function appendUserMessage(userText, userAnalysis, selectedLang, turnData) {
+function appendUserMessage(userText, userAnalysis, selectedLang) {
     const historyContainer = document.getElementById('chatHistory');
     const wrapper = document.createElement('div');
     wrapper.className = 'user-wrapper';
 
     const toggleId = 'user-trans-' + Date.now();
     const langBadges = { korean: '🇰🇷 KO', english: '🇺🇸 EN', japanese: '🇯🇵 JP', chinese: '🇨🇳 CN' };
-    const encodedData = encodeURIComponent(JSON.stringify(turnData));
 
     const htmlContent = `
         <div style="font-size:11px; color:#64748b; margin-bottom:2px;">[${langBadges[selectedLang] || '내 언어'}]</div>
         <div class="chat-bubble-user">${escapeHtml(userText)}</div>
         <div class="user-controls">
-            <button class="save-note-btn" onclick="saveTurnToNotebook(decodeURIComponent('${encodedData}'))">📒 노트에 저장</button>
+            <button class="save-note-btn" onclick="saveCurrentToNotebook()">📒 노트에 저장</button>
             <button class="user-toggle-btn" onclick="toggleUserTranslation('${toggleId}')">
                 🌐 분석 보기 ▾
             </button>
@@ -607,17 +629,20 @@ function appendAIMessage(data) {
     historyContainer.scrollTop = historyContainer.scrollHeight;
 }
 
-async function saveTurnToNotebook(jsonString) {
-    const turn = JSON.parse(jsonString);
+async function saveCurrentToNotebook() {
+    if (!currentTurnData) {
+        alert('저장할 대화 내용이 없습니다.');
+        return;
+    }
 
     const noteItem = {
-        id: 'note_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
+        id: 'note_' + Date.now(),
         date: new Date().toLocaleString(),
-        selected_lang: turn.selected_lang,
-        user_text: turn.user_text,
-        user_analysis: turn.user_analysis,
-        ai_response: turn.languages,
-        contrast_note: turn.metadata?.contrast_note || ''
+        selected_lang: currentTurnData.selected_lang,
+        user_text: currentTurnData.user_text,
+        user_analysis: currentTurnData.user_analysis,
+        ai_response: currentTurnData.languages,
+        contrast_note: currentTurnData.metadata?.contrast_note || ''
     };
 
     try {
@@ -627,7 +652,7 @@ async function saveTurnToNotebook(jsonString) {
             body: JSON.stringify(noteItem)
         });
         if (res.ok) {
-            alert('📒 해당 대화 턴이 학습 노트에 성공적으로 저장되었습니다!');
+            alert('📒 학습 노트에 성공적으로 저장되었습니다!');
         } else {
             alert('노트 저장 중 오류가 발생했습니다.');
         }
@@ -648,7 +673,7 @@ async function openNotebookModal() {
         
         listEl.innerHTML = '';
         if (!cachedNotes || cachedNotes.length === 0) {
-            listEl.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">저장된 학습 노트가 없습니다. 대화 중 각 턴의 '노트에 저장'을 눌러보세요!</div>';
+            listEl.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">저장된 학습 노트가 없습니다.</div>';
             return;
         }
 
@@ -704,7 +729,7 @@ function downloadWordDocument() {
             </style>
         </head>
         <body>
-            <h1 style="color: #2563eb; text-align: center;">📒 4개 국어 다자간 학습 노트 통합본</h1>
+            <h1 style="color: #2563eb; text-align: center;">📒 4개 국어 다자간 학습 노트</h1>
             <hr style="border:1px solid #cbd5e1; margin-bottom: 20px;">
     `;
 
@@ -740,7 +765,7 @@ function downloadWordDocument() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `4개국어_통합학습노트_${new Date().toISOString().slice(0, 10)}.doc`;
+    a.download = `4개국어_학습노트_${new Date().toISOString().slice(0, 10)}.doc`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -751,20 +776,17 @@ async function deleteNotebookItem(noteId) {
     if (!confirm('이 노트를 삭제하시겠습니까?')) return;
     try {
         const res = await fetch(`/api/notebook/${noteId}`, { method: 'DELETE' });
-        if (res.ok) {
-            openNotebookModal(); 
-        }
+        if (res.ok) { openNotebookModal(); }
     } catch (e) {
         alert('삭제 중 오류가 발생했습니다.');
     }
 }
 
-function closeNotebookModal() {
-    document.getElementById('notebookModal').style.display = 'none';
-}
+function closeNotebookModal() { document.getElementById('notebookModal').style.display = 'none'; }
 
 function resetChat() {
     conversationHistory = [];
+    currentTurnData = null;
     document.getElementById('chatHistory').innerHTML = `
         <div class="ai-wrapper">
             <div class="ai-profile">🤖 AI 4개 국어 대화 팀</div>
@@ -819,13 +841,13 @@ async function sendQuery() {
             throw new Error(data.detail || `서버 오류 발생 (${response.status})`);
         }
 
-        const turnData = {
+        currentTurnData = {
             user_text: text,
             selected_lang: selectedLang,
             ...data
         };
 
-        appendUserMessage(text, data.user_analysis, selectedLang, turnData);
+        appendUserMessage(text, data.user_analysis, selectedLang);
         appendAIMessage(data);
 
         conversationHistory.push({ role: 'user', content: text });
