@@ -184,7 +184,7 @@ def call_gemini_api(prompt_text: str, selected_lang: str, history: List[ChatMess
 """
 
     response = client.models.generate_content(
-        model="gemini-2.5-flash",  # 최신 권장 모델 적용
+        model="Gemini 3.5 Flash-Lite",  # 최신 권장 모델 적용
         contents=prompt,
         config=types.GenerateContentConfig(
             response_mime_type="application/json",
