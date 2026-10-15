@@ -183,21 +183,28 @@ def call_gemini_api(prompt_text: str, selected_lang: str, history: List[ChatMess
    - 사용자가 선택한 [{user_lang_name}] 표현과 다른 언어 간의 어순 구조 차이(SOV vs SVO) 및 핵심 문법 포인트를 알기 쉽게 설명하세요.
 """
 
-    # 유효한 최신 표준 모델명 설정 (INVALID_ARGUMENT 방지)
-    response = client.models.generate_content(
-        model="gemini-2.0-flash",
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json",
-            response_schema=MultiLingualResponse,
-            temperature=0.4,
-        ),
-    )
+    # 구글 공식 권장 모델인 gemini-3.8-flash를 최우선으로 시도
+    models_to_try = ["gemini-3.8-flash", "gemini-flash"]
+    last_exception = None
 
-    if not response or not response.text:
-        raise RuntimeError("Gemini API가 빈 응답을 반환했습니다.")
+    for model_name in models_to_try:
+        try:
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_schema=MultiLingualResponse,
+                    temperature=0.4,
+                ),
+            )
+            if response and response.text:
+                return response.text
+        except Exception as e:
+            last_exception = e
+            continue
 
-    return response.text
+    raise RuntimeError(f"모든 AI 모델 호출에 실패했습니다. 상세 오류: {str(last_exception)}")
 
 
 @app.post("/api/chat", response_model=MultiLingualResponse)
